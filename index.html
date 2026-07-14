@@ -11,30 +11,14 @@
             --purple: #9b59b6; --teal: #1abc9c; --red: #e74c3c;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            background: var(--bg); font-family: system-ui, monospace;
-            display: flex; justify-content: center; align-items: center; min-height: 100vh;
-            padding: 12px; color: var(--text);
-            background-image: radial-gradient(ellipse at 20% 20%, #1a2f40 0%, #0a0f1a 80%);
-        }
-        #game-container {
-            width: 100%; max-width: 860px; background: var(--panel);
-            border: 2px solid var(--border); border-radius: 20px; padding: 18px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.7); display: flex;
-            flex-direction: column; gap: 14px; position: relative; min-height: 90vh;
-        }
+        body { background: var(--bg); font-family: system-ui, monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 12px; color: var(--text); background-image: radial-gradient(ellipse at 20% 20%, #1a2f40 0%, #0a0f1a 80%); }
+        #game-container { width: 100%; max-width: 860px; background: var(--panel); border: 2px solid var(--border); border-radius: 20px; padding: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column; gap: 14px; position: relative; min-height: 90vh; }
         #title-area { text-align:center; font-size:1.9rem; font-weight:700; color:var(--gold); border-bottom:1px dashed var(--border); padding-bottom:8px; }
-        .volume-panel {
-            position: absolute; top: 10px; right: 10px; display: flex; align-items: center;
-            gap: 6px; font-size: 0.75rem; color: #95a5a6; z-index: 20;
-        }
+        .volume-panel { position: absolute; top: 10px; right: 10px; display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #95a5a6; z-index: 20; }
         .volume-panel input { width: 70px; }
         .mute-btn { background:none; border:1px solid var(--border); color:var(--text); font-size:1.1rem; cursor:pointer; padding:2px 8px; border-radius:8px; }
         .mute-btn.muted { color:var(--red); border-color:var(--red); }
-        .year-badge {
-            position: absolute; top: 38px; right: 10px; background: var(--gold); color: #0a0f1a;
-            font-weight: bold; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; z-index: 10; display: none;
-        }
+        .year-badge { position: absolute; top: 38px; right: 10px; background: var(--gold); color: #0a0f1a; font-weight: bold; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; z-index: 10; display: none; }
         .stats-panel { display:flex; flex-wrap:wrap; gap:10px; background:#162433; padding:14px; border-radius:14px; font-size:0.8rem; }
         .stat-item { flex:1; min-width:70px; }
         .stat-bar-bg { background:#2c3e50; height:6px; border-radius:10px; overflow:hidden; margin:2px 0; }
@@ -78,7 +62,6 @@
 
 <script>
 (function() {
-// ========== 彩色图标 ==========
 const ICON = {
     green: '<span class="icon-green">●</span>',
     yellow: '<span class="icon-yellow">●</span>',
@@ -115,7 +98,6 @@ const ICON = {
     diffHell: '<span class="icon-red">●</span>',
 };
 
-// ========== 教程文本（完整） ==========
 const tutorialTexts = [
     `欢迎来到OI生涯模拟器！你将扮演一名高一新生，在三年时光里完整经历${ICON.contestCSP}CSP-S、${ICON.contestNOIP}NOIP、${ICON.contestProv}省选、${ICON.contestNOI}NOI、${ICON.contestCTT}CTT、${ICON.contestWC}WC冬令营、${ICON.contestCTS}CTS选拔，直至${ICON.contestIOI}IOI。游戏的核心是管理四项属性——代码力、心态、知识、社交——在比赛之间的有限训练中提升自己，在每一场比赛中利用卡牌策略争取最好的成绩。比赛失利并不意味着结束，你可以选择"明年再战"继续成长。你可以从简单、普通、困难、地狱四种难度中选择，难度会影响分数线、得分倍率、事件概率等几乎所有方面。越高级的比赛（NOI/CTT/CTS/IOI）难度会显著提升，对手也会更强。`,
     `游戏开始时，你可以从四位性格鲜明的主角中选择一位，每位都有独特的能力与弱点：\n\n1. 陈墨·退役边缘人：去年普及组爆零，背负着阴影重新开始。当心态彻底崩溃时，会触发"最后一舞"，3回合内所有代码力消耗减半，但初始心态只有60。看退役记对他来说是力量的源泉，心态+8。\n\n2. 林思远·天赋怪：初中被称为天才，上了高中却开始失眠。所有比赛得分自动+20%，但队友交卷时心态会额外降低。\n\n3. 张浩·刷题机器：刷了三千题，代码力上限提升至150，初始100，但"读错题"的概率翻倍。\n\n4. 苏晓雨·女队独苗：全省唯一进复赛的女生。心态低于30时会自动回复20点（每场比赛仅一次），每场比赛初始分数-10，专属事件可触发下题得分+15%。`,
@@ -129,19 +111,15 @@ const tutorialTexts = [
     '游戏全程通过点击选项按钮进行。你可以随时悬停在属性条上查看详细说明。屏幕底部的日志区域会记录最近发生的重要事件，并用不同颜色区分正负面。祝你享受这段旅程！'
 ];
 
-// ========== 音效 ==========
 let audioCtx = null, muted = false, volume = 0.07;
 function getCtx() { if (!audioCtx) try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {} if (audioCtx?.state==='suspended') audioCtx.resume(); return audioCtx; }
 function playTone(f,d,t,v) { if (muted) return; try { t=t||'sine'; v=v||volume; let c=getCtx(); if(!c)return; let o=c.createOscillator(),g=c.createGain(); o.type=t; o.frequency.setValueAtTime(f,c.currentTime); g.gain.setValueAtTime(v,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d); o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d); } catch(e) {} }
 function initVolume() {
-    const slider = document.getElementById('volSlider');
-    const valSpan = document.getElementById('volVal');
-    const muteBtn = document.getElementById('mute-btn');
+    const slider = document.getElementById('volSlider'), valSpan = document.getElementById('volVal'), muteBtn = document.getElementById('mute-btn');
     slider.addEventListener('input', function(e) { volume = parseFloat(e.target.value); valSpan.textContent = Math.round(volume * 100) + '%'; });
     muteBtn.addEventListener('click', function() { muted = !muted; this.textContent = muted ? '🔇' : '🔊'; this.classList.toggle('muted', muted); });
 }
 
-// ========== 难度 ==========
 const DIFFICULTIES = {
     'easy':   { name:'简单', lineMul:1.05, scoreMul:0.88, bugAdd:0.02, duipaiAdd:0.02, eventProb:0.35, trainNegProb:0.45, itemBonus:-0.08, costMul:1.08, trainGainMul:0.88, itemEffectMul:0.94, expMul:0.88 },
     'normal': { name:'普通', lineMul:1.12, scoreMul:0.78, bugAdd:0.06, duipaiAdd:-0.04, eventProb:0.42, trainNegProb:0.57, itemBonus:-0.05, costMul:1.12, trainGainMul:0.78, itemEffectMul:0.88, expMul:0.78 },
@@ -149,27 +127,14 @@ const DIFFICULTIES = {
     'hell':   { name:'地狱', lineMul:1.5, scoreMul:0.5, bugAdd:0.15, duipaiAdd:-0.15, eventProb:0.55, trainNegProb:0.85, itemBonus:-0.2, costMul:1.3, trainGainMul:0.6, itemEffectMul:0.7, expMul:0.6 }
 };
 function getDiff() { return DIFFICULTIES[G.flags.difficulty] || DIFFICULTIES.normal; }
-function getContestTier(name) {
-    if (name.includes('CSP-S')) return 1; if (name.includes('NOIP')) return 2; if (name.includes('省选')) return 3;
-    if (name.includes('NOI')) return 4; if (name.includes('CTT')) return 5; if (name.includes('CTS')) return 6;
-    if (name.includes('IOI')) return 7; return 1;
-}
+function getContestTier(name) { if (name.includes('CSP-S')) return 1; if (name.includes('NOIP')) return 2; if (name.includes('省选')) return 3; if (name.includes('NOI')) return 4; if (name.includes('CTT')) return 5; if (name.includes('CTS')) return 6; if (name.includes('IOI')) return 7; return 1; }
 function getTierLabel(tier) { return ['入门','入门','进阶','进阶','困难','困难','极限','极限'][tier]||'入门'; }
 function getTierScoreMul(tier) { return Math.max(0.45, 1 - (tier - 1) * 0.07); }
 function getTierCostMul(tier) { return 1 + (tier - 1) * 0.06; }
 function getTierEventMul(tier) { return 1 + (tier - 1) * 0.03; }
 function getTierRivalMul(tier) { return 1 + (tier - 1) * 0.08; }
-function getEventMult() {
-    switch(G.flags.difficulty) {
-        case 'easy': return { pos: 0.8, neg: 1.0 };
-        case 'normal': return { pos: 0.7, neg: 1.2 };
-        case 'hard': return { pos: 0.55, neg: 1.5 };
-        case 'hell': return { pos: 0.4, neg: 1.8 };
-        default: return { pos: 0.7, neg: 1.2 };
-    }
-}
+function getEventMult() { switch(G.flags.difficulty) { case 'easy': return { pos: 0.8, neg: 1.0 }; case 'normal': return { pos: 0.7, neg: 1.2 }; case 'hard': return { pos: 0.55, neg: 1.5 }; case 'hell': return { pos: 0.4, neg: 1.8 }; default: return { pos: 0.7, neg: 1.2 }; } }
 
-// ========== 身份 ==========
 const IDS = [
     { id:'退役边缘人', name:'陈墨', title:'退役边缘人', desc:'去年普及组爆零，背负阴影重新开始。', abi:'心态归零时触发"最后一舞"，3回合内所有代码力消耗减半', weak:'初始心态只有60（容易崩溃）', ic:75,im:60,ik:35,is:35, sp:'last_dance' },
     { id:'天赋怪', name:'林思远', title:'天赋怪', desc:'初中被称为天才，上了高中却开始失眠。', abi:'所有得分自动+20%', weak:'当队友提前交卷时，心态会额外-10', ic:70,im:75,ik:40,is:30, sp:'score_boost' },
@@ -177,7 +142,6 @@ const IDS = [
     { id:'女队独苗', name:'苏晓雨', title:'女队独苗', desc:'全省唯一进入复赛的女生，用键盘回应偏见。', abi:'心态低于30时自动回复20点（每场比赛仅一次）', weak:'每场比赛初始分数-10，专属事件可触发下题+15%', ic:70,im:68,ik:32,is:40, sp:'mood_recover' }
 ];
 
-// ========== 全局状态 ==========
 const G = {
     player: { 代码力:0, 心态:0, 知识:0, 社交:0 },
     flags: {
@@ -214,114 +178,39 @@ function updateDisplay() {
     if (G.flags.year > 0 && G.flags.stage !== 'main') {
         badge.style.display = 'block';
         badge.textContent = (['','高一','高二','高三'][G.flags.year]||'') + (G.flags.term?('·'+G.flags.term):'');
-    } else {
-        badge.style.display = 'none';
-    }
+    } else { badge.style.display = 'none'; }
 }
 
 function showScene(text, choices, progress) {
     let content = text.replace(/\n/g,'<br>');
-    if (progress) {
-        let pct = (G.flags.round/(G.flags.cMaxP*3))*100;
-        content = '<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>' + content;
-    }
+    if (progress) { let pct = (G.flags.round/(G.flags.cMaxP*3))*100; content = '<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>' + content; }
     document.getElementById('scene-content').innerHTML = content;
     let cont = document.getElementById('choices-container'); cont.innerHTML = '';
-    if (G.flags.items.length>0) {
-        let div = document.createElement('div'); div.className='item-box';
-        div.innerHTML = '<span style="color:#1abc9c;">🎒背包：</span>'+G.flags.items.map(i=>'<span style="background:#233b4a;padding:4px 10px;border-radius:20px;">'+i+'</span>').join('');
-        cont.appendChild(div);
-    }
-    choices.forEach(c => {
-        let btn = document.createElement('button');
-        btn.className = 'choice-btn'; btn.innerHTML = c.text;
-        btn.onclick = function() {
-            if (btn.disabled) return; btn.disabled = true;
-            playTone(800, 0.05);
-            try { c.action(); } catch (e) { btn.disabled = false; console.error(e); }
-        };
-        cont.appendChild(btn);
-    });
+    if (G.flags.items.length>0) { let div = document.createElement('div'); div.className='item-box'; div.innerHTML = '<span style="color:#1abc9c;">🎒背包：</span>'+G.flags.items.map(i=>'<span style="background:#233b4a;padding:4px 10px;border-radius:20px;">'+i+'</span>').join(''); cont.appendChild(div); }
+    choices.forEach(c => { let btn = document.createElement('button'); btn.className = 'choice-btn'; btn.innerHTML = c.text; btn.onclick = function() { if (btn.disabled) return; btn.disabled = true; playTone(800, 0.05); try { c.action(); } catch (e) { btn.disabled = false; console.error(e); } }; cont.appendChild(btn); });
     updateDisplay();
 }
 
-function addLog(msg) {
-    G.flags.eventsLog.push(msg);
-    let type = msg.includes('心态+')||msg.includes('代码力+')||msg.includes('知识+')||msg.includes('社交+') ? 'gain' : (msg.includes('心态-')||msg.includes('崩溃') ? 'loss' : 'normal');
-    let panel = document.getElementById('log-panel'); if (!panel) return;
-    let entry = document.createElement('div'); entry.className = 'log-entry '+type; entry.textContent = msg;
-    panel.prepend(entry); while (panel.children.length>20) panel.removeChild(panel.lastChild);
-}
-
-function showFloatText(text, color) {
-    let div = document.createElement('div');
-    div.className = 'float-text'; div.style.color = color||'#f1c40f'; div.textContent = text;
-    document.body.appendChild(div); setTimeout(()=>div.remove(), 2000);
-}
-
-function predictTrainDelta(delta) {
-    if (delta > 0) return Math.max(1, Math.floor(delta * (getDiff().trainGainMul||1)));
-    if (delta < 0) { if (G.player.社交 > 50) return Math.ceil(delta / 2); return delta; }
-    return delta;
-}
+function addLog(msg) { G.flags.eventsLog.push(msg); let type = msg.includes('心态+')||msg.includes('代码力+')||msg.includes('知识+')||msg.includes('社交+') ? 'gain' : (msg.includes('心态-')||msg.includes('崩溃') ? 'loss' : 'normal'); let panel = document.getElementById('log-panel'); if (!panel) return; let entry = document.createElement('div'); entry.className = 'log-entry '+type; entry.textContent = msg; panel.prepend(entry); while (panel.children.length>20) panel.removeChild(panel.lastChild); }
+function showFloatText(text, color) { let div = document.createElement('div'); div.className = 'float-text'; div.style.color = color||'#f1c40f'; div.textContent = text; document.body.appendChild(div); setTimeout(()=>div.remove(), 2000); }
+function predictTrainDelta(delta) { if (delta > 0) return Math.max(1, Math.floor(delta * (getDiff().trainGainMul||1))); if (delta < 0) { if (G.player.社交 > 50) return Math.ceil(delta / 2); return delta; } return delta; }
 
 function updStat(stat, delta) {
-    if (delta > 0 && (G.flags.stage === 'training' || G.flags.stage === 'prep')) {
-        delta = Math.max(1, Math.floor(delta * (getDiff().trainGainMul||1)));
-    } else if (delta < 0 && (G.flags.stage === 'training' || G.flags.stage === 'prep')) {
-        if (G.player.社交 > 50) delta = Math.ceil(delta / 2);
-    }
+    if (delta > 0 && (G.flags.stage === 'training' || G.flags.stage === 'prep')) delta = Math.max(1, Math.floor(delta * (getDiff().trainGainMul||1)));
+    else if (delta < 0 && (G.flags.stage === 'training' || G.flags.stage === 'prep')) { if (G.player.社交 > 50) delta = Math.ceil(delta / 2); }
     let mx = (stat === '代码力' && G.flags.identity?.sp === 'code_cap') ? 150 : 100;
     G.player[stat] = clamp(G.player[stat] + delta, 0, mx);
-    if (stat === '心态') {
-        if (G.player.心态 < G.flags.lowestMood) { G.flags.lowestMood = G.player.心态; G.flags.lowestMoodName = G.flags.curContest; }
-        if (G.player.心态 < G.flags.hiddenFlags.darkestMood) G.flags.hiddenFlags.darkestMood = G.player.心态;
-    }
-    if (stat === '社交') {
-        if (G.player.社交 > 80) G.flags.hiddenFlags.社交高 = true;
-        if (G.player.社交 < 40) G.flags.hiddenFlags.社交低 = true;
-    }
-    if (stat === '心态' && G.player.心态 <= 0 && G.flags.identity?.sp === 'last_dance' && !G.flags.lastDanceTriggered && G.flags.stage === 'contest') {
-        G.flags.lastDanceTriggered = true; G.flags.lastDanceTurns = 3; G.player.心态 = 1;
-        showFloatText('🔥 最后一舞！','#e67e22');
-        showScene('🔥 最后一舞！\n\n你的心态彻底崩了，但心底的不甘让你爆发了惊人力量。接下来3回合内所有代码力消耗减半！',[{text:'继续战斗', action:()=>contestRound()}]);
-        return;
-    }
-    if (stat === '心态' && G.player.心态 < 30 && G.flags.identity?.sp === 'mood_recover' && !G.flags.moodRecoverUsed) {
-        G.flags.moodRecoverUsed = true; updStat('心态', 20); addLog('💪 心态自动回复20点！');
-    }
+    if (stat === '心态') { if (G.player.心态 < G.flags.lowestMood) { G.flags.lowestMood = G.player.心态; } if (G.player.心态 < G.flags.hiddenFlags.darkestMood) G.flags.hiddenFlags.darkestMood = G.player.心态; }
+    if (stat === '社交') { if (G.player.社交 > 80) G.flags.hiddenFlags.社交高 = true; if (G.player.社交 < 40) G.flags.hiddenFlags.社交低 = true; }
+    if (stat === '心态' && G.player.心态 <= 0 && G.flags.identity?.sp === 'last_dance' && !G.flags.lastDanceTriggered && G.flags.stage === 'contest') { G.flags.lastDanceTriggered = true; G.flags.lastDanceTurns = 3; G.player.心态 = 1; showFloatText('🔥 最后一舞！','#e67e22'); showScene('🔥 最后一舞！\n\n你的心态彻底崩了，但心底的不甘让你爆发了惊人力量。接下来3回合内所有代码力消耗减半！',[{text:'继续战斗', action:()=>contestRound()}]); return; }
+    if (stat === '心态' && G.player.心态 < 30 && G.flags.identity?.sp === 'mood_recover' && !G.flags.moodRecoverUsed) { G.flags.moodRecoverUsed = true; updStat('心态', 20); addLog('💪 心态自动回复20点！'); }
 }
 
-function addScore(d) {
-    if (G.flags.gameOver) return;
-    if (d > 0 && G.flags.identity?.sp === 'score_boost') d = Math.floor(d * 1.2);
-    const cap = 100;
-    if (d < 0) { G.flags.cScore += d; G.flags.cProbScore = Math.max(0, G.flags.cProbScore + d); return; }
-    if (G.flags.curProbBonus) d = Math.floor(d * 1.15);
-    let room = Math.max(0, cap - Math.max(0, G.flags.cProbScore));
-    let add = Math.min(d, room);
-    G.flags.cScore += add; G.flags.cProbScore += add;
-}
+function addScore(d) { if (G.flags.gameOver) return; if (d > 0 && G.flags.identity?.sp === 'score_boost') d = Math.floor(d * 1.2); const cap = 100; if (d < 0) { G.flags.cScore += d; G.flags.cProbScore = Math.max(0, G.flags.cProbScore + d); return; } if (G.flags.curProbBonus) d = Math.floor(d * 1.15); let room = Math.max(0, cap - Math.max(0, G.flags.cProbScore)); let add = Math.min(d, room); G.flags.cScore += add; G.flags.cProbScore += add; }
+function useItem(type) { let idx = G.flags.items.indexOf(type); if (idx === -1) return false; G.flags.items.splice(idx, 1); let mul = getDiff().itemEffectMul || 1; switch(type) { case '免死金牌': updStat('心态', Math.floor(20*mul)); break; case '咖啡': updStat('代码力', Math.floor(25*mul)); break; case '小抄': addScore(Math.floor(30*mul)); break; case '幸运符': addScore(Math.floor(15*mul)); break; } addLog('🎒主动使用道具：'+type); updateDisplay(); return true; }
+function showItemUseOptions(next) { if (G.flags.items.length === 0) { next(); return; } let choices = G.flags.items.map(item => ({ text:'使用 '+item, action: function() { useItem(item); showItemUseOptions(next); } })); choices.push({text:'不使用道具', action: ()=>next()}); showScene('🎒 选择要使用的道具（可连续使用多个）：', choices); }
 
-function useItem(type) {
-    let idx = G.flags.items.indexOf(type); if (idx === -1) return false;
-    G.flags.items.splice(idx, 1); let mul = getDiff().itemEffectMul || 1;
-    switch(type) {
-        case '免死金牌': updStat('心态', Math.floor(20*mul)); break;
-        case '咖啡': updStat('代码力', Math.floor(25*mul)); break;
-        case '小抄': addScore(Math.floor(30*mul)); break;
-        case '幸运符': addScore(Math.floor(15*mul)); break;
-    }
-    addLog('🎒主动使用道具：'+type); updateDisplay(); return true;
-}
-function showItemUseOptions(next) {
-    if (G.flags.items.length === 0) { next(); return; }
-    let choices = G.flags.items.map(item => ({ text:'使用 '+item, action: function() { useItem(item); showItemUseOptions(next); } }));
-    choices.push({text:'不使用道具', action: ()=>next()});
-    showScene('🎒 选择要使用的道具（可连续使用多个）：', choices);
-}
-
-// ========== 完整事件库 ==========
+// 完整事件库
 const TRAIN_EV = {
     study:[
         {text:ICON.eventStudy+"你打开洛谷准备刷题，结果网站502。",eff:(m)=>{updStat('心态',-Math.floor(3*m.neg));},txt:(m)=>'心态'+predictTrainDelta(-Math.floor(3*m.neg))},
@@ -494,34 +383,11 @@ function getActionEnv(action) {
 }
 
 // ========== 菜单 ==========
-function mainMenu() {
-    G.flags.stage='main';
-    showScene('🌟 OI生涯模拟器\n\n从高一到高三，经历完整的OI之路。',[
-        {text:'🎮 开始游戏',action:()=>selectDifficulty()},
-        {text:'📖玩法说明',action:()=>showTutorial(0)},
-        {text:'🏛️档案馆',action:()=>showArchive()},
-        {text:'📜更新日志',action:()=>showScene('🎉 2026.7.13\nV1.0.0 游戏上架',[{text:'返回',action:mainMenu}])}
-    ]);
-}
-function showTutorial(idx) {
-    let tabs = ['欢迎','身份系统','核心属性','训练与成长','道具系统','比赛流程','卡牌详解','事件系统','晋级与结局','操作指南'];
-    let html = '<div class="tab-container">'+tabs.map((t,i)=>'<span class="tab '+(i===idx?'active':'')+'" data-idx="'+i+'">'+t+'</span>').join('')+'</div><div class="notebook">'+tutorialTexts[idx]+'</div>';
-    showScene(html, [{text:'返回主菜单', action:mainMenu}]);
-    document.querySelectorAll('.tab').forEach(tab => { tab.onclick = function() { showTutorial(parseInt(this.dataset.idx)); }; });
-}
-function showArchive() {
-    let achList='🏆 成就：\n'+(G.achievements.length?G.achievements.join('\n'):'暂无')+'\n\n🔒 未解锁隐藏成就：\n';
-    let hc={'至暗时刻':'心态降至5点以下','欧皇降临':'撞原题3次以上','燃烧殆尽':'触发最后一舞并获得奖项','冷酷机器':'刷题机器角色且读错题不超过2次','良师益友':'社交>80','独行侠':'社交<40且获得奖项'};
-    for(let k in hc){if(!G.hiddenAch.includes(k))achList+=k+'：'+hc[k]+'\n'}
-    showScene('🏛️ OI档案馆\n\n🏅 获得奖项：\n'+(G.awards.length?G.awards.join('\n'):'暂无')+'\n\n'+achList+'\n📖 训练日记：\n'+(G.flags.diary.length?G.flags.diary.join('\n'):'暂无'),[{text:'返回',action:mainMenu}]);
-}
+function mainMenu() { G.flags.stage='main'; showScene('🌟 OI生涯模拟器\n\n从高一到高三，经历完整的OI之路。',[{text:'🎮 开始游戏',action:()=>selectDifficulty()},{text:'📖玩法说明',action:()=>showTutorial(0)},{text:'🏛️档案馆',action:()=>showArchive()},{text:'📜更新日志',action:()=>showScene('🎉 2026.7.13\nV1.0.0 游戏上架',[{text:'返回',action:mainMenu}])}]); }
+function showTutorial(idx) { let tabs = ['欢迎','身份系统','核心属性','训练与成长','道具系统','比赛流程','卡牌详解','事件系统','晋级与结局','操作指南']; let html = '<div class="tab-container">'+tabs.map((t,i)=>'<span class="tab '+(i===idx?'active':'')+'" data-idx="'+i+'">'+t+'</span>').join('')+'</div><div class="notebook">'+tutorialTexts[idx]+'</div>'; showScene(html, [{text:'返回主菜单', action:mainMenu}]); document.querySelectorAll('.tab').forEach(tab => { tab.onclick = function() { showTutorial(parseInt(this.dataset.idx)); }; }); }
+function showArchive() { let achList='🏆 成就：\n'+(G.achievements.length?G.achievements.join('\n'):'暂无')+'\n\n🔒 未解锁隐藏成就：\n'; let hc={'至暗时刻':'心态降至5点以下','欧皇降临':'撞原题3次以上','燃烧殆尽':'触发最后一舞并获得奖项','冷酷机器':'刷题机器角色且读错题不超过2次','良师益友':'社交>80','独行侠':'社交<40且获得奖项'}; for(let k in hc){if(!G.hiddenAch.includes(k))achList+=k+'：'+hc[k]+'\n'} showScene('🏛️ OI档案馆\n\n🏅 获得奖项：\n'+(G.awards.length?G.awards.join('\n'):'暂无')+'\n\n'+achList+'\n📖 训练日记：\n'+(G.flags.diary.length?G.flags.diary.join('\n'):'暂无'),[{text:'返回',action:mainMenu}]); }
 
-function selectDifficulty() { showScene('⚙️ 选择难度',[
-    {text:ICON.diffEasy+' 简单 - 适合初次体验',action:()=>{G.flags.difficulty='easy';selectIdentity()}},
-    {text:ICON.diffNormal+' 普通 - 标准挑战',action:()=>{G.flags.difficulty='normal';selectIdentity()}},
-    {text:ICON.diffHard+' 困难 - 需要经验与策略',action:()=>{G.flags.difficulty='hard';selectIdentity()}},
-    {text:ICON.diffHell+' 地狱 - 极限受苦，为真正的OIer准备',action:()=>{G.flags.difficulty='hell';selectIdentity()}}
-]); }
+function selectDifficulty() { showScene('⚙️ 选择难度',[{text:ICON.diffEasy+' 简单 - 适合初次体验',action:()=>{G.flags.difficulty='easy';selectIdentity()}},{text:ICON.diffNormal+' 普通 - 标准挑战',action:()=>{G.flags.difficulty='normal';selectIdentity()}},{text:ICON.diffHard+' 困难 - 需要经验与策略',action:()=>{G.flags.difficulty='hard';selectIdentity()}},{text:ICON.diffHell+' 地狱 - 极限受苦，为真正的OIer准备',action:()=>{G.flags.difficulty='hell';selectIdentity()}}]); }
 function selectIdentity() { showScene('🎭选择你的身份',IDS.map((id,i)=>({text:(i+1)+'. '+id.name+'·'+id.title,action:()=>confirmIdentity(i)}))); }
 function confirmIdentity(i) { let id=IDS[i]; G.flags.identity=id; G.player={代码力:id.ic,心态:id.im,知识:id.ik,社交:id.is}; showScene('📜'+id.name+'·'+id.title+'\n\n'+id.desc+'\n\n✨能力：'+id.abi+'\n⚠️弱点：'+id.weak,[{text:'✅确定',action:()=>startNewGame()},{text:'↩️重选',action:selectIdentity}]); }
 function startNewGame() {
@@ -535,25 +401,7 @@ function startNewGame() {
     adjustCutoffs();addLog('高一新生，OI之旅开始！');prologuePrep();
 }
 
-function adjustCutoffs() {
-    let r=()=>Math.floor(Math.random()*16)-8; let diffMul=getDiff().lineMul;
-    let baseCttP = 450, baseCtsP = 350;
-    let base={cspP:250, noipG:200, pTeamA:312, noiG:350, cttP:baseCttP, ctsP:baseCtsP, ioiG:380};
-    if(G.flags.difficulty==='hard'){base.cspP=300;base.noipG=240;base.pTeamA=335;base.noiG=380;base.cttP=520;base.ctsP=400;}
-    if(G.flags.difficulty==='hell'){base.cspP=325;base.noipG=260;base.pTeamA=385;base.noiG=420;base.cttP=610;base.ctsP=470;}
-    let f=G.flags.fortune;
-    if(f==='small')for(let k in base)base[k]=Math.floor(base[k]*0.9);
-    else if(f==='big')for(let k in base)base[k]=Math.floor(base[k]*1.1);
-    G.cutoffs={
-        cspP:clamp(Math.floor(base.cspP*diffMul)+r(),200,320),
-        noipG:clamp(Math.floor(base.noipG*diffMul)+r(),160,260),
-        pTeamA:clamp(Math.floor(base.pTeamA*diffMul)+r(),250,400),
-        noiG:clamp(Math.floor(base.noiG*diffMul)+r(),300,420),
-        cttP:clamp(Math.floor(base.cttP*diffMul)+r(),400,650),
-        ctsP:clamp(Math.floor(base.ctsP*diffMul)+r(),300,500),
-        ioiG:clamp(Math.floor(base.ioiG*diffMul)+r(),320,450)
-    };
-}
+function adjustCutoffs() { let r=()=>Math.floor(Math.random()*16)-8; let diffMul=getDiff().lineMul; let baseCttP = 450, baseCtsP = 350; let base={cspP:250, noipG:200, pTeamA:312, noiG:350, cttP:baseCttP, ctsP:baseCtsP, ioiG:380}; if(G.flags.difficulty==='hard'){base.cspP=300;base.noipG=240;base.pTeamA=335;base.noiG=380;base.cttP=520;base.ctsP=400;} if(G.flags.difficulty==='hell'){base.cspP=325;base.noipG=260;base.pTeamA=385;base.noiG=420;base.cttP=610;base.ctsP=470;} let f=G.flags.fortune; if(f==='small')for(let k in base)base[k]=Math.floor(base[k]*0.9); else if(f==='big')for(let k in base)base[k]=Math.floor(base[k]*1.1); G.cutoffs={ cspP:clamp(Math.floor(base.cspP*diffMul)+r(),200,320), noipG:clamp(Math.floor(base.noipG*diffMul)+r(),160,260), pTeamA:clamp(Math.floor(base.pTeamA*diffMul)+r(),250,400), noiG:clamp(Math.floor(base.noiG*diffMul)+r(),300,420), cttP:clamp(Math.floor(base.cttP*diffMul)+r(),400,650), ctsP:clamp(Math.floor(base.ctsP*diffMul)+r(),300,500), ioiG:clamp(Math.floor(base.ioiG*diffMul)+r(),320,450) }; }
 function getCSPAward(s) { let c=G.cutoffs; if(s>=c.cspP)return'🥇CSP-S一等奖'; if(s>=c.cspP*0.75)return'🥈CSP-S二等奖'; if(s>=c.cspP*0.4)return'🥉CSP-S三等奖'; return'未获奖'; }
 function getNOIPAward(s) { let c=G.cutoffs; if(s>=c.noipG)return'🥇NOIP一等奖'; if(s>=c.noipG*0.75)return'🥈NOIP二等奖'; if(s>=c.noipG*0.4)return'🥉NOIP三等奖'; return'未获奖'; }
 function getProvAward(t) { let c=G.cutoffs; if(t>=c.pTeamA)return'🌟 入选省队A类 (NOI+5分)'; if(t>=c.pTeamA*0.85)return'🌟 入选省队B类'; if(t>=c.pTeamA*0.7)return'🌟 入选省队C类'; return'❌ 未入选省队'; }
@@ -668,7 +516,7 @@ function startContest(name,probs,desc,next){
     showScene('🏁 '+name+' ('+getTierLabel(G.flags.contestTier)+')\n'+desc+'\n题目数：'+probs+'题',[{text:'开始比赛',action:()=>selectStrategy(()=>showItemUseOptions(()=>contestRound()))}]);
 }
 
-// 核心比赛逻辑（含彩色卡牌）
+// 核心比赛逻辑
 function showCardsForCurrentRound() {
     let m = getEventMult();
     if(G.player.社交>60&&Math.random()<0.25){addScore(Math.floor(5*m.pos));addLog('🤝 队友的信任让你更有信心，额外+'+Math.floor(5*m.pos)+'分');}

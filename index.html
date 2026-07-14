@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -24,14 +24,19 @@
             flex-direction: column; gap: 14px; position: relative; min-height: 90vh;
         }
         #title-area { text-align:center; font-size:1.9rem; font-weight:700; color:var(--gold); border-bottom:1px dashed var(--border); padding-bottom:8px; }
+        .volume-panel {
+            position: absolute; top: 10px; right: 10px; display: flex; align-items: center;
+            gap: 6px; font-size: 0.75rem; color: #95a5a6; z-index: 20;
+        }
+        .volume-panel input { width: 70px; }
+        .mute-btn { background:none; border:1px solid var(--border); color:var(--text); font-size:1.1rem; cursor:pointer; padding:2px 8px; border-radius:8px; }
+        .mute-btn.muted { color:var(--red); border-color:var(--red); }
         .year-badge {
-            position:absolute; top:10px; right:10px; background:var(--gold); color:#0a0f1a;
-            font-weight:bold; padding:2px 10px; border-radius:12px; font-size:0.75rem;
-            z-index:10; display:none;
+            position: absolute; top: 38px; right: 10px; background: var(--gold); color: #0a0f1a;
+            font-weight: bold; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; z-index: 10; display: none;
         }
         .stats-panel { display:flex; flex-wrap:wrap; gap:10px; background:#162433; padding:14px; border-radius:14px; font-size:0.8rem; }
         .stat-item { flex:1; min-width:70px; }
-        .stat-label { color:#95a5a6; font-size:0.65rem; text-transform:uppercase; }
         .stat-bar-bg { background:#2c3e50; height:6px; border-radius:10px; overflow:hidden; margin:2px 0; }
         .stat-bar-fill { height:100%; border-radius:10px; transition:width 0.4s; }
         .code-fill { background:var(--green); } .mood-fill { background:var(--orange); } .know-fill { background:var(--purple); } .social-fill { background:var(--teal); }
@@ -45,14 +50,6 @@
         .log-entry.gain { color:#2ecc71; } .log-entry.loss { color:#e74c3c; }
         .float-text { position:fixed; top:30%; left:50%; transform:translate(-50%,-50%); font-size:2.5rem; font-weight:bold; color:var(--gold); z-index:999; pointer-events:none; animation:floatUp 2s ease-out forwards; }
         @keyframes floatUp { 0%{opacity:1;top:30%;} 100%{opacity:0;top:10%;} }
-        .tab-container { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
-        .tab { background:#2c3e50; padding:6px 12px; border-radius:8px 8px 0 0; cursor:pointer; font-weight:bold; color:#b0c4de; font-size:0.7rem; }
-        .tab.active { background:var(--gold); color:#0a0f1a; }
-        .notebook { background:#fef9e7; color:#2c3e50; padding:18px; border-radius:12px; font-family:cursive; line-height:1.9; background-image:linear-gradient(#e0d7c0 1px,transparent 1px); background-size:100% 32px; box-shadow:0 4px 10px rgba(0,0,0,0.4); }
-        .progress-bar { width:100%; height:8px; background:#2c3e50; border-radius:4px; margin:8px 0; overflow:hidden; }
-        .progress-fill { height:100%; background:var(--gold); transition:width 0.3s; }
-        .diff-dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:middle; box-shadow:0 0 6px currentColor; }
-        .diff-easy { background:#2ecc71; } .diff-normal { background:#f1c40f; } .diff-hard { background:#e67e22; } .diff-hell { background:#e74c3c; }
         .icon-green { color: #2ecc71; font-weight:bold; }
         .icon-yellow { color: #f1c40f; font-weight:bold; }
         .icon-red { color: #e74c3c; font-weight:bold; }
@@ -66,6 +63,12 @@
 <body>
 <div id="game-container">
     <div id="title-area">🏆 OI生涯模拟器</div>
+    <div class="volume-panel">
+        <span>🔊</span>
+        <input type="range" min="0" max="0.15" step="0.01" value="0.07" id="volSlider">
+        <span id="volVal">7%</span>
+        <button class="mute-btn" id="mute-btn" title="静音/取消静音">🔊</button>
+    </div>
     <span id="year-badge" class="year-badge">高一·上学期</span>
     <div id="stats-panel" class="stats-panel"></div>
     <div id="scene-content"></div>
@@ -85,7 +88,6 @@ const ICON = {
     teal: '<span class="icon-teal">◆</span>',
     orange: '<span class="icon-orange">●</span>',
     blue: '<span class="icon-blue">●</span>',
-    // 训练选项
     trainStudy: '<span class="icon-teal">📘</span>',
     trainDeep: '<span class="icon-purple">🧠</span>',
     trainSport: '<span class="icon-green">🏃</span>',
@@ -93,14 +95,12 @@ const ICON = {
     trainSleep: '<span class="icon-blue">💤</span>',
     trainRetire: '<span class="icon-orange">📝</span>',
     trainDiary: '<span class="icon-gold">📖</span>',
-    // 事件前缀
     eventStudy: '<span class="icon-teal">📚</span>',
     eventDeep: '<span class="icon-purple">🔬</span>',
     eventSocial: '<span class="icon-yellow">🤝</span>',
     eventSleep: '<span class="icon-blue">🌙</span>',
     eventRetire: '<span class="icon-orange">🏁</span>',
     eventWC: '<span class="icon-teal">⛄</span>',
-    // 比赛图标
     contestCSP: '<span class="icon-green">🟢</span>',
     contestNOIP: '<span class="icon-green">🟢</span>',
     contestProv: '<span class="icon-yellow">🟡</span>',
@@ -109,14 +109,13 @@ const ICON = {
     contestWC: '<span class="icon-teal">⛄</span>',
     contestCTS: '<span class="icon-red">🔴</span>',
     contestIOI: '<span class="icon-purple">🟣</span>',
-    // 难度图标
     diffEasy: '<span class="icon-green">●</span>',
     diffNormal: '<span class="icon-yellow">●</span>',
     diffHard: '<span class="icon-orange">●</span>',
     diffHell: '<span class="icon-red">●</span>',
 };
 
-// ========== 完整教程文本 ==========
+// ========== 教程文本（完整） ==========
 const tutorialTexts = [
     `欢迎来到OI生涯模拟器！你将扮演一名高一新生，在三年时光里完整经历${ICON.contestCSP}CSP-S、${ICON.contestNOIP}NOIP、${ICON.contestProv}省选、${ICON.contestNOI}NOI、${ICON.contestCTT}CTT、${ICON.contestWC}WC冬令营、${ICON.contestCTS}CTS选拔，直至${ICON.contestIOI}IOI。游戏的核心是管理四项属性——代码力、心态、知识、社交——在比赛之间的有限训练中提升自己，在每一场比赛中利用卡牌策略争取最好的成绩。比赛失利并不意味着结束，你可以选择"明年再战"继续成长。你可以从简单、普通、困难、地狱四种难度中选择，难度会影响分数线、得分倍率、事件概率等几乎所有方面。越高级的比赛（NOI/CTT/CTS/IOI）难度会显著提升，对手也会更强。`,
     `游戏开始时，你可以从四位性格鲜明的主角中选择一位，每位都有独特的能力与弱点：\n\n1. 陈墨·退役边缘人：去年普及组爆零，背负着阴影重新开始。当心态彻底崩溃时，会触发"最后一舞"，3回合内所有代码力消耗减半，但初始心态只有60。看退役记对他来说是力量的源泉，心态+8。\n\n2. 林思远·天赋怪：初中被称为天才，上了高中却开始失眠。所有比赛得分自动+20%，但队友交卷时心态会额外降低。\n\n3. 张浩·刷题机器：刷了三千题，代码力上限提升至150，初始100，但"读错题"的概率翻倍。\n\n4. 苏晓雨·女队独苗：全省唯一进复赛的女生。心态低于30时会自动回复20点（每场比赛仅一次），每场比赛初始分数-10，专属事件可触发下题得分+15%。`,
@@ -126,7 +125,7 @@ const tutorialTexts = [
     `每年你将依次参加以下比赛（晋级难度逐级递增）：\n${ICON.contestCSP}CSP-S（4题·入门）→ ${ICON.contestNOIP}NOIP（4题·入门）→ ${ICON.contestProv}省选Day1+Day2（各3题·进阶，加权总分=NOIP×35%+省选×65%）→ ${ICON.contestNOI}NOI Day1+Day2（各3题·困难，A类+5分）→ ${ICON.contestCTT}CTT选拔Day1→训练→Day2→训练→Day3（各3题·困难，三场总分决定进入WC）→ ${ICON.contestWC}WC冬令营（5次训练，质量评分）→ ${ICON.contestCTS}CTS选拔Day1→训练→Day2（各3题·极限，加权总分决定国家队）→ ${ICON.contestIOI}IOI Day1+Day2（各3题·极限）。\n\n每道题包含3个回合：思路与实现、编码与构造、调试与提交。每回合你会从随机卡牌中选择一张打出。比赛过程中如果代码力或心态归零，比赛提前结束，但已得分会保留并正常判定晋级。\n\n越高级的比赛，基础得分越低、消耗越高、对手越强。每场比赛开始前，你还可以选择本场策略：稳扎稳打（稳健卡牌得分+15%）、放手一搏（高风险卡牌得分+20%）、心态调整（跳题回复额外+5心态），系统会基于属性给出推荐。`,
     `每回合你会从随机卡牌中选择一张：\n\n· ${ICON.green}绿色卡牌（稳健）：稳定得分，消耗适中。如暴力思路、稳健实现。\n· ${ICON.yellow}黄色卡牌（风险）：高分高消耗，可能失败。如正解思路、快速编码。\n· ${ICON.red}红色卡牌（事故）：负面效果，如读错题、段错误（最多重选3次）。\n· ${ICON.purple}巧解思路：知识≥80时解锁，消耗更低得分更高。\n· ${ICON.gold}传说灵感：不同身份有不同触发条件，提供大幅得分且无消耗。\n\n心态和知识影响基础得分。每题上限100分，不会溢出。社交>60时每回合可选卡牌+1。比赛画面顶部有进度条显示当前进度。`,
     `比赛中会频繁出现随机事件，考验你的临场决策：手机震动是否偷看、草稿纸用完、监考老师站身后、空格键卡住（可举手求助跳过下回合）、旁边人代码全红、教练门口比手势、突然肚子疼、撞原题直接加分、停电跳过1回合、旁边坐着省队选手、评测系统公告、时间看错、队友扔纸团（社交影响好坏）、心理崩溃边缘、灵感爆发、队友提前交卷（天赋怪额外扣心态）。每个角色还有专属事件。固定回合（第4、7、8、11及最后一题）有特殊剧情，社交高可解锁更好选项。事件收益与惩罚随难度等级变化。`,
-    `每场比赛结束后的晋级判定：\n· CSP-S：得分>0即可进入NOIP\n· NOIP：达到省选线\n· 省选：NOIP×35%+省选×65%的加权总分决定省队分队，A类NOI总分+5分\n· NOI：总分划分金银铜牌，金牌进CTT\n· CTT：三场总分达到集训队选拔线，进入WC冬令营\n· WC冬令营：5次训练累积质量分，转化为平时成绩（质量分×10，满分100）\n· CTS：加权总分 = CTT总分×54% + CTS总分×36% + 平时成绩×10%，达到国家队线则入选\n· IOI：结束后游戏结束，展示最终评价\n\n特殊规则：高二时若任意比赛失败，游戏会立即结束并显示原因。进入高三的唯一途径是高二NOI金牌且通过CTT选拔；若高一即通过CTT，则高二直接进入冲刺赛季（CSP-S/NOIP纯参与，之后WC+CTS+IOI）。高三赛季中，CSP‑S和NOIP为纯参与，之后进行WC冬令营、CTS和IOI，失败即结束。结局展示最终属性、奖项、隐藏成就、生涯数据、历届NOI成绩以及对手回忆。`,
+    `每场比赛结束后的晋级判定：\n· CSP-S：得分>0即可进入NOIP\n· NOIP：达到省选线\n· 省选：NOIP×35%+省选×65%的加权总分决定省队分队，A类NOI总分+5分\n· NOI：总分划分金银铜牌，金牌进CTT\n· CTT：三场总分达到集训队选拔线，进入WC冬令营\n· WC冬令营：5次训练累积质量分，转化为平时成绩（质量分×10，满分100）\n· CTS：加权总分 = CTT总分×54% + CTS总分×36% + 平时成绩×10%，达到国家队线则入选\n· IOI：结束后游戏结束，展示最终评价\n\n特殊规则：高二时若任意比赛失败，游戏会立即结束并显示原因（精英路线除外）。进入高三的唯一途径是高二NOI金牌且通过CTT选拔；若高一即通过CTT，则高二直接进入精英路线（正常参加CSP-S/NOIP/省选/NOI，但失败不影响生存）。高三赛季中，CSP‑S和NOIP为纯参与，之后进行WC冬令营、CTS和IOI，失败即结束。结局展示最终属性、奖项、隐藏成就、生涯数据、历届NOI成绩以及对手回忆。`,
     '游戏全程通过点击选项按钮进行。你可以随时悬停在属性条上查看详细说明。屏幕底部的日志区域会记录最近发生的重要事件，并用不同颜色区分正负面。祝你享受这段旅程！'
 ];
 
@@ -134,6 +133,13 @@ const tutorialTexts = [
 let audioCtx = null, muted = false, volume = 0.07;
 function getCtx() { if (!audioCtx) try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {} if (audioCtx?.state==='suspended') audioCtx.resume(); return audioCtx; }
 function playTone(f,d,t,v) { if (muted) return; try { t=t||'sine'; v=v||volume; let c=getCtx(); if(!c)return; let o=c.createOscillator(),g=c.createGain(); o.type=t; o.frequency.setValueAtTime(f,c.currentTime); g.gain.setValueAtTime(v,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d); o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d); } catch(e) {} }
+function initVolume() {
+    const slider = document.getElementById('volSlider');
+    const valSpan = document.getElementById('volVal');
+    const muteBtn = document.getElementById('mute-btn');
+    slider.addEventListener('input', function(e) { volume = parseFloat(e.target.value); valSpan.textContent = Math.round(volume * 100) + '%'; });
+    muteBtn.addEventListener('click', function() { muted = !muted; this.textContent = muted ? '🔇' : '🔊'; this.classList.toggle('muted', muted); });
+}
 
 // ========== 难度 ==========
 const DIFFICULTIES = {
@@ -143,7 +149,6 @@ const DIFFICULTIES = {
     'hell':   { name:'地狱', lineMul:1.5, scoreMul:0.5, bugAdd:0.15, duipaiAdd:-0.15, eventProb:0.55, trainNegProb:0.85, itemBonus:-0.2, costMul:1.3, trainGainMul:0.6, itemEffectMul:0.7, expMul:0.6 }
 };
 function getDiff() { return DIFFICULTIES[G.flags.difficulty] || DIFFICULTIES.normal; }
-
 function getContestTier(name) {
     if (name.includes('CSP-S')) return 1; if (name.includes('NOIP')) return 2; if (name.includes('省选')) return 3;
     if (name.includes('NOI')) return 4; if (name.includes('CTT')) return 5; if (name.includes('CTS')) return 6;
@@ -154,7 +159,6 @@ function getTierScoreMul(tier) { return Math.max(0.45, 1 - (tier - 1) * 0.07); }
 function getTierCostMul(tier) { return 1 + (tier - 1) * 0.06; }
 function getTierEventMul(tier) { return 1 + (tier - 1) * 0.03; }
 function getTierRivalMul(tier) { return 1 + (tier - 1) * 0.08; }
-
 function getEventMult() {
     switch(G.flags.difficulty) {
         case 'easy': return { pos: 0.8, neg: 1.0 };
@@ -257,10 +261,7 @@ function showFloatText(text, color) {
 
 function predictTrainDelta(delta) {
     if (delta > 0) return Math.max(1, Math.floor(delta * (getDiff().trainGainMul||1)));
-    if (delta < 0) {
-        if (G.player.社交 > 50) return Math.ceil(delta / 2);
-        return delta;
-    }
+    if (delta < 0) { if (G.player.社交 > 50) return Math.ceil(delta / 2); return delta; }
     return delta;
 }
 
@@ -320,7 +321,7 @@ function showItemUseOptions(next) {
     showScene('🎒 选择要使用的道具（可连续使用多个）：', choices);
 }
 
-// ========== 完整事件库（全部使用彩色前缀） ==========
+// ========== 完整事件库 ==========
 const TRAIN_EV = {
     study:[
         {text:ICON.eventStudy+"你打开洛谷准备刷题，结果网站502。",eff:(m)=>{updStat('心态',-Math.floor(3*m.neg));},txt:(m)=>'心态'+predictTrainDelta(-Math.floor(3*m.neg))},
@@ -492,7 +493,7 @@ function getActionEnv(action) {
     return '';
 }
 
-// ========== 菜单与界面 ==========
+// ========== 菜单 ==========
 function mainMenu() {
     G.flags.stage='main';
     showScene('🌟 OI生涯模拟器\n\n从高一到高三，经历完整的OI之路。',[
@@ -515,7 +516,6 @@ function showArchive() {
     showScene('🏛️ OI档案馆\n\n🏅 获得奖项：\n'+(G.awards.length?G.awards.join('\n'):'暂无')+'\n\n'+achList+'\n📖 训练日记：\n'+(G.flags.diary.length?G.flags.diary.join('\n'):'暂无'),[{text:'返回',action:mainMenu}]);
 }
 
-// 难度选项添加彩色图标
 function selectDifficulty() { showScene('⚙️ 选择难度',[
     {text:ICON.diffEasy+' 简单 - 适合初次体验',action:()=>{G.flags.difficulty='easy';selectIdentity()}},
     {text:ICON.diffNormal+' 普通 - 标准挑战',action:()=>{G.flags.difficulty='normal';selectIdentity()}},
@@ -630,21 +630,39 @@ function seniorCSPContest(){ startContest('CSP-S',4,'（纯参与）', s => { G.
 function seniorNOIPContest(){ startContest('NOIP',4,'（纯参与）', s => { G.flags.scores.noip=s; showScene('NOIP 得分：'+s, [{text:'继续',action:()=> freeTraining(3, ()=> cttDay1())}]); }); }
 
 // 关键分支
-function checkCSPResult(score) { G.flags.scores.csp = score; const award = getCSPAward(score); addAward(award); if (score <= 0) { if (G.flags.year === 1) { showScene('💔CSP-S爆零', [{text:'明年再战',action:()=>advanceYear()},{text:'退役',action:()=>endGame('退役')}]); } else if (G.flags.eliteMode) { showScene('CSP-S 得分为 0，但作为集训队成员，你将继续前进。', [{text:'继续',action:()=> freeTraining(3, noipContest)}]); } else { endGame('CSP-S爆零，竞赛生涯结束'); } } else { if (G.flags.year === 3) { showScene('CSP-S 得分：'+score+'（纯参与）', [{text:'继续',action:()=> freeTraining(3, seniorNOIPContest)}]); } else { showScene('🎉CSP-S：'+score+'分\n'+award, [{text:'进入NOIP训练',action:()=> freeTraining(3, noipContest)}]); } } }
-function checkNOIPResult(score) { G.flags.scores.noip = score; const award = getNOIPAward(score); addAward(award); if (score < G.cutoffs.noipG*0.75) { if (G.flags.eliteMode) { showScene('NOIP 未达线，但集训队身份让你继续前进。', [{text:'继续',action:()=> freeTraining(3, provDay1)}]); } else if (G.flags.year === 2) { endGame('高二NOIP未晋级'); } else { showScene('📉NOIP未晋级', [{text:'明年再战',action:()=>advanceYear()},{text:'退役',action:()=>endGame('退役')}]); } } else { showScene('🏅NOIP：'+score+'分\n'+award, [{text:'进入省选训练',action:()=> freeTraining(3, provDay1)}]); } }
+function checkCSPResult(score) {
+    G.flags.scores.csp = score; const award = getCSPAward(score); addAward(award);
+    if (score <= 0) {
+        if (G.flags.year === 1) { showScene('💔CSP-S爆零', [{text:'明年再战',action:()=>advanceYear()},{text:'退役',action:()=>endGame('退役')}]); }
+        else if (G.flags.eliteMode) { showScene('CSP-S 得分为 0，但作为集训队成员，你将继续前进。', [{text:'继续',action:()=> freeTraining(3, noipContest)}]); }
+        else { endGame('CSP-S爆零，竞赛生涯结束'); }
+    } else {
+        if (G.flags.year === 3) { showScene('CSP-S 得分：'+score+'（纯参与）', [{text:'继续',action:()=> freeTraining(3, seniorNOIPContest)}]); }
+        else { showScene('🎉CSP-S：'+score+'分\n'+award, [{text:'进入NOIP训练',action:()=> freeTraining(3, noipContest)}]); }
+    }
+}
+function checkNOIPResult(score) {
+    G.flags.scores.noip = score; const award = getNOIPAward(score); addAward(award);
+    if (score < G.cutoffs.noipG*0.75) {
+        if (G.flags.eliteMode) { showScene('NOIP 未达线，但集训队身份让你继续前进。', [{text:'继续',action:()=> freeTraining(3, provDay1)}]); }
+        else if (G.flags.year === 2) { endGame('高二NOIP未晋级'); }
+        else { showScene('📉NOIP未晋级', [{text:'明年再战',action:()=>advanceYear()},{text:'退役',action:()=>endGame('退役')}]); }
+    } else {
+        showScene('🏅NOIP：'+score+'分\n'+award, [{text:'进入省选训练',action:()=> freeTraining(3, provDay1)}]);
+    }
+}
 function checkProvResult(weighted) { const award = getProvAward(weighted); addAward(award); if (award.includes('A类')) G.flags.noiBonus = 5; if (!award.includes('未入选')) { showScene('🌟省选加权总分 '+weighted+'\n'+award, [{text:'备战NOI',action:()=> freeTraining(3, noiDay1)}]); } else { if (G.flags.eliteMode) { showScene('省选未入选，但集训队身份让你继续参加NOI。', [{text:'继续',action:()=> freeTraining(3, noiDay1)}]); } else if (G.flags.year === 2) { endGame('高二省选未入选'); } else { showScene('💧省选未入选', [{text:'明年再战',action:()=>advanceYear()},{text:'退役',action:()=>endGame('退役')}]); } } }
 function checkNOIResult(total) { G.flags.scores.noi = total; G.flags.scores.noiHistory.push({year:G.flags.year, score:total}); const award = getNOIAward(total); addAward(award); if (total >= G.cutoffs.noiG) { unlockAch('NOI金牌'); if (G.flags.year === 1) { G.flags.eliteMode = true; G.flags.sprintBQualified = true; showScene('🥇NOI总分 '+total+'\n'+award+'\n\n你以高一身份获得金牌，入选国家集训队！\n高二将进入精英路线。', [{text:'继续', action:()=> { G.flags.year = 2; G.flags.term = '上学期'; showScene('升入高二，精英路线开始。', [{text:'开始',action:()=> freeTraining(5, cspContest)}]); }}]); } else if (G.flags.year === 2) { G.flags.sprintBQualified = true; if (G.flags.eliteMode) { showScene('🥇NOI总分 '+total+'\n'+award+'\n你再次获得金牌，已获得高三冲刺B资格。', [{text:'继续', action:()=> freeTraining(3, cttDay1) }]); } else { showScene('🥇NOI总分 '+total+'\n'+award+'\n入选国家集训队！高三将进行国家队选拔。', [{text:'继续', action:()=> { G.flags.year = 3; G.flags.term = '上学期'; showScene('升入高三，冲刺B路线开始。', [{text:'开始',action:()=> freeTraining(5, seniorCSPContest)}]); }}]); } } } else { if (G.flags.eliteMode) { showScene('NOI总分 '+total+'\n'+award+'\n未获金牌，但你仍可继续国家队选拔。', [{text:'继续', action:()=> freeTraining(3, cttDay1) }]); } else if (G.flags.year === 2) { endGame('高二NOI未能获得金牌'); } else { showScene('NOI总分 '+total+'\n'+award, [{text:'明年再战',action:()=>advanceYear()},{text:'退役',action:()=>endGame('退役')}]); } } }
 function checkCTTResult(total) { G.flags.scores.ctt = total; const award = getCTTAward(total); addAward(award); if (total >= G.cutoffs.cttP) { wcTraining(()=> ctsDay1()); } else { if (G.flags.sprintBQualified && G.flags.year !== 3) { showScene('CTT 未通过，但你有 NOI 金牌资格，高三可继续冲刺B。', [{text:'进入高三冲刺B', action:()=> { G.flags.year = 3; G.flags.term = '上学期'; showScene('升入高三，冲刺B路线开始。', [{text:'开始',action:()=> freeTraining(5, seniorCSPContest)}]); }}]); } else { endGame('CTT未通过'); } } }
 function checkCTSResult(ctsTotal) { let dailyScore = Math.min(100, G.flags.wcQuality * 10); let finalScore = Math.floor(G.flags.scores.ctt*0.54 + ctsTotal*0.36 + dailyScore*0.1); G.flags.scores.cts = ctsTotal; const award = getCTSAward(finalScore); addAward(award); if (finalScore >= G.cutoffs.ctsP) { showScene('🏆 加权总分：'+finalScore+'\n'+award+'\n入选国家队！', [{text:'备战IOI', action:()=> freeTraining(3, ioiDay1) }]); } else { if (G.flags.sprintBQualified && G.flags.year !== 3) { showScene('CTS 未通过，但你有 NOI 金牌资格，高三可继续冲刺B。', [{text:'进入高三冲刺B', action:()=> { G.flags.year = 3; G.flags.term = '上学期'; showScene('升入高三，冲刺B路线开始。', [{text:'开始',action:()=> freeTraining(5, seniorCSPContest)}]); }}]); } else { endGame('CTS 未通过'); } } }
 function advanceYear() { if (G.flags.year >= 2) { endGame('竞赛生涯结束'); return; } G.flags.year++; G.player.代码力=clamp(Math.floor(G.player.代码力*0.8)+15,0,150); G.player.心态=Math.floor(G.player.心态*0.8); G.player.知识=Math.floor(G.player.知识*0.8); G.player.社交=Math.floor(G.player.社交*0.8); adjustCutoffs(); showScene('重新开始，这次是高二了。', [{text:'开始新赛季',action:()=> freeTraining(5, cspContest)}]); }
 
-// 策略与开始
 function selectStrategy(next) { let recommend = ''; if (G.player.代码力 < 40) recommend = ' 💡推荐：稳扎稳打'; else if (G.player.知识 > 70) recommend = ' 💡推荐：放手一搏'; else if (G.player.心态 < 40) recommend = ' 💡推荐：心态调整'; showScene('🎯 选择本场策略：'+recommend, [{text:'稳扎稳打（绿色+15%）', action:()=>{ G.flags.strategy='steady'; next(); }},{text:'放手一搏（黄色+20%）', action:()=>{ G.flags.strategy='risky'; next(); }},{text:'心态调整（跳题额外+5心态）', action:()=>{ G.flags.strategy='mood'; next(); }}]); }
 function startContest(name,probs,desc,next){
     G.flags.stage='contest';G.flags.curContest=name;G.flags.cMaxP=probs;G.flags.round=0;
     G.flags.cScore = G.flags.identity?.sp === 'mood_recover' ? -10 : 0;
     G.flags.cProbScore=0;G.flags.nextProbBonus=false;G.flags.curProbBonus=false;G.flags.nextCb=next;G.flags.rerollCount=0;G.flags.lastAction=null;
-    G.flags.moodRecoverUsed = false; // 每场比赛重置
+    G.flags.moodRecoverUsed = false;
     G.flags.contestTier=getContestTier(name);
     G.flags.lastDanceTriggered = false; G.flags.lastDanceTurns = 0; G.flags.lastWasEvent = false;
     showScene('🏁 '+name+' ('+getTierLabel(G.flags.contestTier)+')\n'+desc+'\n题目数：'+probs+'题',[{text:'开始比赛',action:()=>selectStrategy(()=>showItemUseOptions(()=>contestRound()))}]);
@@ -802,7 +820,9 @@ function endGame(msg){
 
 // 初始化
 function init(){
-    updateDisplay(); addLog('欢迎，OIer。'); mainMenu();
+    updateDisplay(); addLog('欢迎，OIer。');
+    initVolume();
+    mainMenu();
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
 else init();

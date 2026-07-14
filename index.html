@@ -92,7 +92,7 @@
 
 <script>
 (function() {
-// 图标定义（使用对象，避免模板字符串）
+// ===== 图标定义 =====
 var ICON = {
     green: '<span class="icon-green">●</span>',
     yellow: '<span class="icon-yellow">●</span>',
@@ -142,6 +142,7 @@ var tutorialTexts = [
     "游戏全程通过点击选项按钮进行。你可以随时悬停在属性条上查看详细说明。屏幕底部的日志区域会记录最近发生的重要事件，并用不同颜色区分正负面。祝你享受这段旅程！"
 ];
 
+// ===== 音效系统 =====
 var audioCtx = null, muted = false, volume = 0.07;
 function getCtx() { if (!audioCtx) try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {} if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
 function playTone(f,d,t,v) { if (muted) return; try { t=t||'sine'; v=v||volume; var c=getCtx(); if(!c)return; var o=c.createOscillator(), g=c.createGain(); o.type=t; o.frequency.setValueAtTime(f,c.currentTime); g.gain.setValueAtTime(v,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d); o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+d); } catch(e) {} }
@@ -151,6 +152,7 @@ function initVolume() {
     muteBtn.addEventListener('click', function() { muted = !muted; this.textContent = muted ? '🔇' : '🔊'; this.classList.toggle('muted', muted); });
 }
 
+// ===== 难度和通用函数 =====
 var DIFFICULTIES = {
     'easy':   { name:'简单', lineMul:1.05, scoreMul:0.88, bugAdd:0.02, duipaiAdd:0.02, eventProb:0.35, trainNegProb:0.45, itemBonus:-0.08, costMul:1.08, trainGainMul:0.88, itemEffectMul:0.94, expMul:0.88 },
     'normal': { name:'普通', lineMul:1.12, scoreMul:0.78, bugAdd:0.06, duipaiAdd:-0.04, eventProb:0.42, trainNegProb:0.57, itemBonus:-0.05, costMul:1.12, trainGainMul:0.78, itemEffectMul:0.88, expMul:0.78 },
@@ -173,6 +175,7 @@ var IDS = [
     { id:'女队独苗', name:'苏晓雨', title:'女队独苗', desc:'全省唯一进入复赛的女生，用键盘回应偏见。', abi:'心态低于30时自动回复20点（每场比赛仅一次）', weak:'每场比赛初始分数-10，专属事件可触发下题+15%', ic:70,im:68,ik:32,is:40, sp:'mood_recover' }
 ];
 
+// ===== 全局对象 G =====
 var G = {
     player: { 代码力:0, 心态:0, 知识:0, 社交:0 },
     flags: {
@@ -195,9 +198,24 @@ var G = {
     cutoffs:{}, achievements:[], hiddenAch:[], awards:[]
 };
 
+// 确保数组属性始终有值（防御）
+function ensureArrays() {
+    if (!G.flags.eventsLog) G.flags.eventsLog = [];
+    if (!G.flags.diary) G.flags.diary = [];
+    if (!G.flags.items) G.flags.items = [];
+    if (!G.flags.rivals) G.flags.rivals = [];
+    if (!G.flags.scores) G.flags.scores = {csp:0,noip:0,pd1:0,pd2:0,noi:0,ctt:0,cts:0,ioi:0, noiHistory:[], cttD1:0, cttD2:0, cttD3:0};
+    if (!G.flags.scores.noiHistory) G.flags.scores.noiHistory = [];
+    if (!G.flags.hiddenFlags) G.flags.hiddenFlags = {darkestMood:100, luckyCount:0, grinderClean:0, 社交低:false, 社交高:false};
+    if (!G.flags.contestPlayed) G.flags.contestPlayed = {csp:false,noip:false,pd1:false,pd2:false,noi:false,ctt:false,cts:false,ioi:false};
+    if (!G.flags.rivals) G.flags.rivals = [];
+}
+
+// ===== 核心函数 =====
 function clamp(v,min,max) { return Math.max(min, Math.min(max, v)); }
 
 function updateDisplay() {
+    ensureArrays();
     var p = G.player;
     var codeMax = (G.flags.identity && G.flags.identity.sp === 'code_cap') ? 150 : 100;
     var cd = Math.min(p.代码力, codeMax);
@@ -205,9 +223,9 @@ function updateDisplay() {
     var codePct = (cd / codeMax) * 100;
     document.getElementById('stats-panel').innerHTML =
         '<div class="stat-item"><span class="stat-label">💻代码力</span><div class="stat-bar-bg"><div class="stat-bar-fill code-fill" style="width:' + codePct + '%"></div></div>' + p.代码力 + '/' + codeMax + '</div>' +
-        '<div class="stat-item"><span class="stat-label">🧠心态</span><div class="stat-bar-bg"><div class="stat-bar-fill mood-fill" style="width:' + p.心态 + '%"></div></div>' + p.心态 + '</div>' +
-        '<div class="stat-item"><span class="stat-label">📚知识</span><div class="stat-bar-bg"><div class="stat-bar-fill know-fill" style="width:' + p.知识 + '%"></div></div>' + p.知识 + '</div>' +
-        '<div class="stat-item"><span class="stat-label">🤝社交</span><div class="stat-bar-bg"><div class="stat-bar-fill social-fill" style="width:' + p.社交 + '%"></div></div>' + p.社交 + '</div>';
+        '<div class="stat-item"><span class="stat-label">🧠心态</span><div class="stat-bar-bg"><div class="stat-bar-fill mood-fill" style="width:' + p.心态 + '%"></div></div>' + p.心态 + '/100</div>' +
+        '<div class="stat-item"><span class="stat-label">📚知识</span><div class="stat-bar-bg"><div class="stat-bar-fill know-fill" style="width:' + p.知识 + '%"></div></div>' + p.知识 + '/100</div>' +
+        '<div class="stat-item"><span class="stat-label">🤝社交</span><div class="stat-bar-bg"><div class="stat-bar-fill social-fill" style="width:' + p.社交 + '%"></div></div>' + p.社交 + '/100</div>';
     var badge = document.getElementById('year-badge');
     if (G.flags.year > 0 && G.flags.stage !== 'main') {
         badge.style.display = 'block';
@@ -216,6 +234,7 @@ function updateDisplay() {
 }
 
 function showScene(text, choices, progress) {
+    ensureArrays();
     var content = text.replace(/\n/g, '<br>');
     if (progress) { var pct = (G.flags.round / (G.flags.cMaxP * 3)) * 100; content = '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' + content; }
     document.getElementById('scene-content').innerHTML = content;
@@ -242,7 +261,19 @@ function showScene(text, choices, progress) {
     updateDisplay();
 }
 
-function addLog(msg) { G.flags.eventsLog.push(msg); var type = msg.indexOf('心态+') !== -1 || msg.indexOf('代码力+') !== -1 || msg.indexOf('知识+') !== -1 || msg.indexOf('社交+') !== -1 ? 'gain' : (msg.indexOf('心态-') !== -1 || msg.indexOf('崩溃') !== -1 ? 'loss' : 'normal'); var panel = document.getElementById('log-panel'); if (!panel) return; var entry = document.createElement('div'); entry.className = 'log-entry ' + type; entry.textContent = msg; panel.prepend(entry); while (panel.children.length > 20) panel.removeChild(panel.lastChild); }
+function addLog(msg) {
+    ensureArrays();
+    if (!G.flags.eventsLog) G.flags.eventsLog = [];
+    G.flags.eventsLog.push(msg);
+    var type = msg.indexOf('心态+') !== -1 || msg.indexOf('代码力+') !== -1 || msg.indexOf('知识+') !== -1 || msg.indexOf('社交+') !== -1 ? 'gain' : (msg.indexOf('心态-') !== -1 || msg.indexOf('崩溃') !== -1 ? 'loss' : 'normal');
+    var panel = document.getElementById('log-panel');
+    if (!panel) return;
+    var entry = document.createElement('div');
+    entry.className = 'log-entry ' + type;
+    entry.textContent = msg;
+    panel.prepend(entry);
+    while (panel.children.length > 20) panel.removeChild(panel.lastChild);
+}
 function showFloatText(text, color) { var div = document.createElement('div'); div.className = 'float-text'; div.style.color = color || '#f1c40f'; div.textContent = text; document.body.appendChild(div); setTimeout(function(){ div.remove(); }, 2000); }
 function predictTrainDelta(delta) { if (delta > 0) return Math.max(1, Math.floor(delta * (getDiff().trainGainMul || 1))); if (delta < 0) { if (G.player.社交 > 50) return Math.ceil(delta / 2); return delta; } return delta; }
 
@@ -261,7 +292,7 @@ function addScore(d) { if (G.flags.gameOver) return; if (d > 0 && G.flags.identi
 function useItem(type) { var idx = G.flags.items.indexOf(type); if (idx === -1) return false; G.flags.items.splice(idx, 1); var mul = getDiff().itemEffectMul || 1; switch(type) { case '免死金牌': updStat('心态', Math.floor(20*mul)); break; case '咖啡': updStat('代码力', Math.floor(25*mul)); break; case '小抄': addScore(Math.floor(30*mul)); break; case '幸运符': addScore(Math.floor(15*mul)); break; } addLog('🎒主动使用道具：' + type); updateDisplay(); return true; }
 function showItemUseOptions(next) { if (G.flags.items.length === 0) { next(); return; } var choices = G.flags.items.map(function(item) { return { text:'使用 ' + item, action: function() { useItem(item); showItemUseOptions(next); } }; }); choices.push({text:'不使用道具', action: function(){ next(); } }); showScene('🎒 选择要使用的道具（可连续使用多个）：', choices); }
 
-// 事件库（使用普通数组和对象，避免模板字符串）
+// ===== 完整事件库 =====
 var TRAIN_EV = {
     study:[
         {text: ICON.eventStudy + "你打开洛谷准备刷题，结果网站502。", eff: function(m){ updStat('心态', -Math.floor(3*m.neg)); }, txt: function(m){ return '心态' + predictTrainDelta(-Math.floor(3*m.neg)); } },
@@ -433,7 +464,7 @@ function getActionEnv(action) {
     return '';
 }
 
-// 主菜单与教程
+// ===== 主菜单与教程 =====
 function mainMenu() { G.flags.stage='main'; showScene('🌟 OI生涯模拟器\n\n从高一到高三，经历完整的OI之路。', [{text:'🎮 开始游戏', action:function(){ selectDifficulty(); } }, {text:'📖玩法说明', action:function(){ showTutorial(0); } }, {text:'🏛️档案馆', action:function(){ showArchive(); } }, {text:'📜更新日志', action:function(){ showScene('🎉 2026.7.13\nV1.0.0 游戏上架', [{text:'返回', action:mainMenu}]); } }]); }
 function showTutorial(idx) { var tabs = ['欢迎','身份系统','核心属性','训练与成长','道具系统','比赛流程','卡牌详解','事件系统','晋级与结局','操作指南']; var html = '<div class="tab-container">' + tabs.map(function(t,i){ return '<span class="tab ' + (i===idx?'active':'') + '" data-idx="' + i + '">' + t + '</span>'; }).join('') + '</div><div class="notebook">' + tutorialTexts[idx] + '</div>'; showScene(html, [{text:'返回主菜单', action:mainMenu}]); document.querySelectorAll('.tab').forEach(function(tab){ tab.onclick = function(){ showTutorial(parseInt(this.dataset.idx)); }; }); }
 function showArchive() { var achList = '🏆 成就：\n' + (G.achievements.length ? G.achievements.join('\n') : '暂无') + '\n\n🔒 未解锁隐藏成就：\n'; var hc = {'至暗时刻':'心态降至5点以下','欧皇降临':'撞原题3次以上','燃烧殆尽':'触发最后一舞并获得奖项','冷酷机器':'刷题机器角色且读错题不超过2次','良师益友':'社交>80','独行侠':'社交<40且获得奖项'}; for (var k in hc) { if (G.hiddenAch.indexOf(k) === -1) achList += k + '：' + hc[k] + '\n'; } showScene('🏛️ OI档案馆\n\n🏅 获得奖项：\n' + (G.awards.length ? G.awards.join('\n') : '暂无') + '\n\n' + achList + '\n📖 训练日记：\n' + (G.flags.diary.length ? G.flags.diary.join('\n') : '暂无'), [{text:'返回', action:mainMenu}]); }
@@ -464,7 +495,7 @@ function unlockAch(n) { if (G.achievements.indexOf(n) === -1) { G.achievements.p
 function unlockHidden(n) { if (G.hiddenAch.indexOf(n) === -1) { G.hiddenAch.push(n); addLog('✨ 隐藏成就：' + n); showFloatText('✨ ' + n, '#e84393'); } }
 function addAward(awardText) { if (awardText && awardText.indexOf('未获奖') === -1 && awardText.indexOf('未入选') === -1 && awardText.indexOf('未通过') === -1 && awardText.indexOf('未获') === -1) G.awards.push(awardText); }
 
-// 训练
+// ===== 训练 =====
 function prologuePrep() { G.flags.stage='prep'; G.flags.term='上学期'; showScene('📅高一·上学期·赛前准备 (5次训练)', [{text:'开始训练', action:function(){ freeTraining(5, cspContest); } }]); }
 function freeTraining(cnt,next) { G.flags.stage='training'; G.flags.trainingCount=0; G.flags.trainingMax=cnt; G.flags.nextCb=next; trainingStep(); }
 function nextTraining() { if (G.flags.trainingCount >= G.flags.trainingMax) { var cb = G.flags.nextCb; if (cb) cb(); } else trainingStep(); }
@@ -509,7 +540,7 @@ function afterTrainAction() {
 }
 function showDiary() { var all = G.flags.diary.length ? G.flags.diary.join('\n') : '暂无训练日记。'; showScene('📖 训练日记\n\n' + all, [{text:'返回', action:showTrainingOptions}]); }
 
-// 比赛入口
+// ===== 比赛入口 =====
 function cspContest() { G.flags.contestPlayed.csp = true; startContest('CSP-S', 4, '', function(s){ checkCSPResult(s); }); }
 function noipContest() { G.flags.contestPlayed.noip = true; startContest('NOIP', 4, '省级联赛', function(s){ checkNOIPResult(s); }); }
 function provDay1() { G.flags.contestPlayed.pd1 = true; startContest('省选Day1', 3, '省队选拔', function(s){ G.flags.scores.pd1 = s; freeTraining(3, provDay2); }); }
@@ -528,7 +559,7 @@ function ioiDay2() { startContest('IOI Day2', 3, '巅峰之战', function(s){ va
 function seniorCSPContest() { startContest('CSP-S', 4, '（纯参与）', function(s){ G.flags.scores.csp = s; showScene('CSP-S 得分：' + s, [{text:'继续', action:function(){ freeTraining(3, seniorNOIPContest); } }]); }); }
 function seniorNOIPContest() { startContest('NOIP', 4, '（纯参与）', function(s){ G.flags.scores.noip = s; showScene('NOIP 得分：' + s, [{text:'继续', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]); }); }
 
-// 比赛结果判定
+// ===== 比赛结果判定 =====
 function checkCSPResult(score) {
     G.flags.scores.csp = score; var award = getCSPAward(score); addAward(award);
     if (score <= 0) {
@@ -600,7 +631,7 @@ function startContest(name, probs, desc, next) {
     showScene('🏁 ' + name + ' (' + getTierLabel(G.flags.contestTier) + ')\n' + desc + '\n题目数：' + probs + '题', [{text:'开始比赛', action:function(){ selectStrategy(function(){ showItemUseOptions(function(){ contestRound(); }); }); } }]);
 }
 
-// 比赛核心逻辑
+// ===== 比赛核心逻辑 =====
 function showCardsForCurrentRound() {
     var m = getEventMult();
     if (G.player.社交 > 60 && Math.random() < 0.25) { addScore(Math.floor(5 * m.pos)); addLog('🤝 队友的信任让你更有信心，额外+' + Math.floor(5 * m.pos) + '分'); }
@@ -728,7 +759,7 @@ function contestRound() {
     showCardsForCurrentRound();
 }
 
-// 修改后的 endContest（已加固）
+// ===== 修改后的 endContest（已加固） =====
 function endContest() {
     if (G.flags.gameOver) return;
     var s = G.flags.cScore, next = G.flags.nextCb;
@@ -791,9 +822,11 @@ function endGame(msg) {
     showScene(summary, [{text:'🏛️档案馆', action:function(){ showArchive(); } }, {text:'🏠主菜单', action:mainMenu}]);
 }
 
-// 初始化
+// ===== 初始化 =====
 function init() {
-    updateDisplay(); addLog('欢迎，OIer。');
+    ensureArrays();
+    updateDisplay(); 
+    addLog('欢迎，OIer。');
     initVolume();
     mainMenu();
 }

@@ -33,7 +33,7 @@
         .mute-btn.muted { color:var(--red); border-color:var(--red); }
         .year-badge {
             position: absolute; top: 38px; right: 10px; background: var(--gold); color: #0a0f1a;
-            font-weight: bold; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; z-index: 10; display: none;
+            font-weight: bold; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; z-index: 10;
         }
         .stats-panel { display:flex; flex-wrap:wrap; gap:10px; background:#162433; padding:14px; border-radius:14px; font-size:0.8rem; }
         .stat-item { flex:1; min-width:70px; }
@@ -92,7 +92,7 @@
 
 <script>
 (function() {
-// ===== 图标定义 =====
+// ===== 图标 =====
 var ICON = {
     green: '<span class="icon-green">●</span>',
     yellow: '<span class="icon-yellow">●</span>',
@@ -129,6 +129,7 @@ var ICON = {
     diffHell: '<span class="icon-red">●</span>',
 };
 
+// ===== 教程（完整10段）=====
 var tutorialTexts = [
     "欢迎来到OI生涯模拟器！你将扮演一名高一新生，在三年时光里完整经历" + ICON.contestCSP + "CSP-S、" + ICON.contestNOIP + "NOIP、" + ICON.contestProv + "省选、" + ICON.contestNOI + "NOI、" + ICON.contestCTT + "CTT、" + ICON.contestWC + "WC冬令营、" + ICON.contestCTS + "CTS选拔，直至" + ICON.contestIOI + "IOI。游戏的核心是管理四项属性——代码力、心态、知识、社交——在比赛之间的有限训练中提升自己，在每一场比赛中利用卡牌策略争取最好的成绩。比赛失利并不意味着结束，你可以选择\"明年再战\"继续成长。你可以从简单、普通、困难、地狱四种难度中选择，难度会影响分数线、得分倍率、事件概率等几乎所有方面。越高级的比赛（NOI/CTT/CTS/IOI）难度会显著提升，对手也会更强。",
     "游戏开始时，你可以从四位性格鲜明的主角中选择一位，每位都有独特的能力与弱点：\n\n1. 陈墨·退役边缘人：去年普及组爆零，背负着阴影重新开始。当心态彻底崩溃时，会触发\"最后一舞\"，3回合内所有代码力消耗减半，但初始心态只有60。看退役记对他来说是力量的源泉，心态+8。\n\n2. 林思远·天赋怪：初中被称为天才，上了高中却开始失眠。所有比赛得分自动+20%，但队友交卷时心态会额外降低。\n\n3. 张浩·刷题机器：刷了三千题，代码力上限提升至150，初始100，但\"读错题\"的概率翻倍。\n\n4. 苏晓雨·女队独苗：全省唯一进复赛的女生。心态低于30时会自动回复20点（每场比赛仅一次），每场比赛初始分数-10，专属事件可触发下题得分+15%。",
@@ -142,7 +143,7 @@ var tutorialTexts = [
     "游戏全程通过点击选项按钮进行。你可以随时悬停在属性条上查看详细说明。屏幕底部的日志区域会记录最近发生的重要事件，并用不同颜色区分正负面。祝你享受这段旅程！"
 ];
 
-// ===== 音效系统 =====
+// ===== 音效 =====
 var audioCtx = null, muted = false, volume = 0.07;
 function getCtx() { if (!audioCtx) try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {} if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
 function playTone(f,d,t,v) { if (muted) return; try { t=t||'sine'; v=v||volume; var c=getCtx(); if(!c)return; var o=c.createOscillator(), g=c.createGain(); o.type=t; o.frequency.setValueAtTime(f,c.currentTime); g.gain.setValueAtTime(v,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d); o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+d); } catch(e) {} }
@@ -152,7 +153,7 @@ function initVolume() {
     muteBtn.addEventListener('click', function() { muted = !muted; this.textContent = muted ? '🔇' : '🔊'; this.classList.toggle('muted', muted); });
 }
 
-// ===== 难度和通用函数 =====
+// ===== 难度 =====
 var DIFFICULTIES = {
     'easy':   { name:'简单', lineMul:1.05, scoreMul:0.88, bugAdd:0.02, duipaiAdd:0.02, eventProb:0.35, trainNegProb:0.45, itemBonus:-0.08, costMul:1.08, trainGainMul:0.88, itemEffectMul:0.94, expMul:0.88 },
     'normal': { name:'普通', lineMul:1.12, scoreMul:0.78, bugAdd:0.06, duipaiAdd:-0.04, eventProb:0.42, trainNegProb:0.57, itemBonus:-0.05, costMul:1.12, trainGainMul:0.78, itemEffectMul:0.88, expMul:0.78 },
@@ -160,13 +161,13 @@ var DIFFICULTIES = {
     'hell':   { name:'地狱', lineMul:1.5, scoreMul:0.5, bugAdd:0.15, duipaiAdd:-0.15, eventProb:0.55, trainNegProb:0.85, itemBonus:-0.2, costMul:1.3, trainGainMul:0.6, itemEffectMul:0.7, expMul:0.6 }
 };
 function getDiff() { return DIFFICULTIES[G.flags.difficulty] || DIFFICULTIES.normal; }
-function getContestTier(name) { if (name.indexOf('CSP-S') !== -1) return 1; if (name.indexOf('NOIP') !== -1) return 2; if (name.indexOf('省选') !== -1) return 3; if (name.indexOf('NOI') !== -1) return 4; if (name.indexOf('CTT') !== -1) return 5; if (name.indexOf('CTS') !== -1) return 6; if (name.indexOf('IOI') !== -1) return 7; return 1; }
+function getContestTier(name) { if (name.indexOf('CSP-S')!==-1) return 1; if (name.indexOf('NOIP')!==-1) return 2; if (name.indexOf('省选')!==-1) return 3; if (name.indexOf('NOI')!==-1) return 4; if (name.indexOf('CTT')!==-1) return 5; if (name.indexOf('CTS')!==-1) return 6; if (name.indexOf('IOI')!==-1) return 7; return 1; }
 function getTierLabel(tier) { return ['入门','入门','进阶','进阶','困难','困难','极限','极限'][tier] || '入门'; }
-function getTierScoreMul(tier) { return Math.max(0.45, 1 - (tier - 1) * 0.07); }
-function getTierCostMul(tier) { return 1 + (tier - 1) * 0.06; }
-function getTierEventMul(tier) { return 1 + (tier - 1) * 0.03; }
-function getTierRivalMul(tier) { return 1 + (tier - 1) * 0.08; }
-function getEventMult() { switch(G.flags.difficulty) { case 'easy': return { pos: 0.8, neg: 1.0 }; case 'normal': return { pos: 0.7, neg: 1.2 }; case 'hard': return { pos: 0.55, neg: 1.5 }; case 'hell': return { pos: 0.4, neg: 1.8 }; default: return { pos: 0.7, neg: 1.2 }; } }
+function getTierScoreMul(tier) { return Math.max(0.45, 1 - (tier-1)*0.07); }
+function getTierCostMul(tier) { return 1 + (tier-1)*0.06; }
+function getTierEventMul(tier) { return 1 + (tier-1)*0.03; }
+function getTierRivalMul(tier) { return 1 + (tier-1)*0.08; }
+function getEventMult() { switch(G.flags.difficulty) { case 'easy': return {pos:0.8, neg:1.0}; case 'normal': return {pos:0.7, neg:1.2}; case 'hard': return {pos:0.55, neg:1.5}; case 'hell': return {pos:0.4, neg:1.8}; default: return {pos:0.7, neg:1.2}; } }
 
 var IDS = [
     { id:'退役边缘人', name:'陈墨', title:'退役边缘人', desc:'去年普及组爆零，背负阴影重新开始。', abi:'心态归零时触发"最后一舞"，3回合内所有代码力消耗减半', weak:'初始心态只有60（容易崩溃）', ic:75,im:60,ik:35,is:35, sp:'last_dance' },
@@ -175,7 +176,6 @@ var IDS = [
     { id:'女队独苗', name:'苏晓雨', title:'女队独苗', desc:'全省唯一进入复赛的女生，用键盘回应偏见。', abi:'心态低于30时自动回复20点（每场比赛仅一次）', weak:'每场比赛初始分数-10，专属事件可触发下题+15%', ic:70,im:68,ik:32,is:40, sp:'mood_recover' }
 ];
 
-// ===== 全局对象 G =====
 var G = {
     player: { 代码力:0, 心态:0, 知识:0, 社交:0 },
     flags: {
@@ -194,12 +194,14 @@ var G = {
         contestTier:1, lastWasEvent:false,
         wcQuality:0, wcTrainCount:0,
         eliteMode:false, sprintBQualified:false,
-        wcHistory:[]   // 用于联动记录
+        wcHistory:[],
+        provQualified: false,
+        cspPassed: false,
+        cttFailed: false
     },
     cutoffs:{}, achievements:[], hiddenAch:[], awards:[]
 };
 
-// 确保数组属性始终有值（防御）
 function ensureArrays() {
     if (!G.flags.eventsLog) G.flags.eventsLog = [];
     if (!G.flags.diary) G.flags.diary = [];
@@ -212,9 +214,7 @@ function ensureArrays() {
     if (!G.flags.rivals) G.flags.rivals = [];
     if (!G.flags.wcHistory) G.flags.wcHistory = [];
 }
-
-// ===== 核心函数 =====
-function clamp(v,min,max) { return Math.max(min, Math.min(max, v)); }
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 
 function updateDisplay() {
     ensureArrays();
@@ -224,24 +224,24 @@ function updateDisplay() {
     if (G.flags.lastDanceTurns > 0) cd = Math.min(Math.floor(p.代码力 * 1.5), codeMax);
     var codePct = (cd / codeMax) * 100;
     document.getElementById('stats-panel').innerHTML =
-        '<div class="stat-item"><span class="stat-label">💻代码力</span><div class="stat-bar-bg"><div class="stat-bar-fill code-fill" style="width:' + codePct + '%"></div></div>' + p.代码力 + '/' + codeMax + '</div>' +
-        '<div class="stat-item"><span class="stat-label">🧠心态</span><div class="stat-bar-bg"><div class="stat-bar-fill mood-fill" style="width:' + p.心态 + '%"></div></div>' + p.心态 + '/100</div>' +
-        '<div class="stat-item"><span class="stat-label">📚知识</span><div class="stat-bar-bg"><div class="stat-bar-fill know-fill" style="width:' + p.知识 + '%"></div></div>' + p.知识 + '/100</div>' +
-        '<div class="stat-item"><span class="stat-label">🤝社交</span><div class="stat-bar-bg"><div class="stat-bar-fill social-fill" style="width:' + p.社交 + '%"></div></div>' + p.社交 + '/100</div>';
+        '<div class="stat-item"><span class="stat-label">💻代码力</span><div class="stat-bar-bg"><div class="stat-bar-fill code-fill" style="width:'+codePct+'%"></div></div>'+p.代码力+'/'+codeMax+'</div>'+
+        '<div class="stat-item"><span class="stat-label">🧠心态</span><div class="stat-bar-bg"><div class="stat-bar-fill mood-fill" style="width:'+p.心态+'%"></div></div>'+p.心态+'/100</div>'+
+        '<div class="stat-item"><span class="stat-label">📚知识</span><div class="stat-bar-bg"><div class="stat-bar-fill know-fill" style="width:'+p.知识+'%"></div></div>'+p.知识+'/100</div>'+
+        '<div class="stat-item"><span class="stat-label">🤝社交</span><div class="stat-bar-bg"><div class="stat-bar-fill social-fill" style="width:'+p.社交+'%"></div></div>'+p.社交+'/100</div>';
     var badge = document.getElementById('year-badge');
     if (G.flags.year > 0 && G.flags.stage !== 'main') {
         badge.style.display = 'block';
-        badge.textContent = (['','高一','高二','高三'][G.flags.year] || '') + (G.flags.term ? ('·' + G.flags.term) : '');
+        badge.textContent = (['','高一','高二','高三'][G.flags.year] || '') + '·' + G.flags.term;
     } else { badge.style.display = 'none'; }
 }
 
 function showScene(text, choices, progress) {
     ensureArrays();
-    var content = text.replace(/\n/g, '<br>');
-    if (progress) { var pct = (G.flags.round / (G.flags.cMaxP * 3)) * 100; content = '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' + content; }
+    var content = text.replace(/\n/g,'<br>');
+    if (progress) { var pct = (G.flags.round/(G.flags.cMaxP*3))*100; content = '<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'+content; }
     document.getElementById('scene-content').innerHTML = content;
     var cont = document.getElementById('choices-container'); cont.innerHTML = '';
-    if (G.flags.items.length > 0) { var div = document.createElement('div'); div.className = 'item-box'; div.innerHTML = '<span style="color:#1abc9c;">🎒背包：</span>' + G.flags.items.map(function(i){ return '<span style="background:#233b4a;padding:4px 10px;border-radius:20px;">' + i + '</span>'; }).join(''); cont.appendChild(div); }
+    if (G.flags.items.length > 0) { var div = document.createElement('div'); div.className='item-box'; div.innerHTML = '<span style="color:#1abc9c;">🎒背包：</span>'+G.flags.items.map(function(i){ return '<span style="background:#233b4a;padding:4px 10px;border-radius:20px;">'+i+'</span>'; }).join(''); cont.appendChild(div); }
     choices.forEach(function(c) {
         var btn = document.createElement('button');
         btn.className = 'choice-btn';
@@ -250,12 +250,10 @@ function showScene(text, choices, progress) {
             if (btn.disabled) return;
             btn.disabled = true;
             playTone(800, 0.05);
-            try {
-                c.action();
-            } catch(e) {
+            try { c.action(); } catch(e) {
                 console.error('按钮执行出错：', e);
-                addLog('❌ 错误：' + e.message);
-                showScene('发生错误：' + e.message + '\n请返回主菜单重新开始。', [{text:'返回主菜单', action:mainMenu}]);
+                addLog('❌ 错误：'+e.message);
+                showScene('发生错误：'+e.message+'\n请返回主菜单重新开始。', [{text:'返回主菜单', action:mainMenu}]);
             }
         };
         cont.appendChild(btn);
@@ -265,221 +263,199 @@ function showScene(text, choices, progress) {
 
 function addLog(msg) {
     ensureArrays();
-    if (!G.flags.eventsLog) G.flags.eventsLog = [];
     G.flags.eventsLog.push(msg);
-    var type = msg.indexOf('心态+') !== -1 || msg.indexOf('代码力+') !== -1 || msg.indexOf('知识+') !== -1 || msg.indexOf('社交+') !== -1 ? 'gain' : (msg.indexOf('心态-') !== -1 || msg.indexOf('崩溃') !== -1 ? 'loss' : 'normal');
+    var type = msg.indexOf('心态+')!==-1||msg.indexOf('代码力+')!==-1||msg.indexOf('知识+')!==-1||msg.indexOf('社交+')!==-1 ? 'gain' : (msg.indexOf('心态-')!==-1||msg.indexOf('崩溃')!==-1 ? 'loss' : 'normal');
     var panel = document.getElementById('log-panel');
     if (!panel) return;
     var entry = document.createElement('div');
-    entry.className = 'log-entry ' + type;
+    entry.className = 'log-entry '+type;
     entry.textContent = msg;
     panel.prepend(entry);
     while (panel.children.length > 20) panel.removeChild(panel.lastChild);
 }
-function showFloatText(text, color) { var div = document.createElement('div'); div.className = 'float-text'; div.style.color = color || '#f1c40f'; div.textContent = text; document.body.appendChild(div); setTimeout(function(){ div.remove(); }, 2000); }
-function predictTrainDelta(delta) { if (delta > 0) return Math.max(1, Math.floor(delta * (getDiff().trainGainMul || 1))); if (delta < 0) { if (G.player.社交 > 50) return Math.ceil(delta / 2); return delta; } return delta; }
+function showFloatText(text, color) { var div = document.createElement('div'); div.className = 'float-text'; div.style.color = color||'#f1c40f'; div.textContent = text; document.body.appendChild(div); setTimeout(function(){ div.remove(); }, 2000); }
+function predictTrainDelta(delta) { if (delta > 0) return Math.max(1, Math.floor(delta * (getDiff().trainGainMul||1))); if (delta < 0) { if (G.player.社交 > 50) return Math.ceil(delta/2); return delta; } return delta; }
 
 function updStat(stat, delta) {
-    if (delta > 0 && (G.flags.stage === 'training' || G.flags.stage === 'prep')) delta = Math.max(1, Math.floor(delta * (getDiff().trainGainMul || 1)));
-    else if (delta < 0 && (G.flags.stage === 'training' || G.flags.stage === 'prep')) { if (G.player.社交 > 50) delta = Math.ceil(delta / 2); }
+    if (delta > 0 && (G.flags.stage === 'training' || G.flags.stage === 'prep')) delta = Math.max(1, Math.floor(delta * (getDiff().trainGainMul||1)));
+    else if (delta < 0 && (G.flags.stage === 'training' || G.flags.stage === 'prep')) { if (G.player.社交 > 50) delta = Math.ceil(delta/2); }
     var mx = (stat === '代码力' && G.flags.identity && G.flags.identity.sp === 'code_cap') ? 150 : 100;
     G.player[stat] = clamp(G.player[stat] + delta, 0, mx);
-    if (stat === '心态') { if (G.player.心态 < G.flags.lowestMood) { G.flags.lowestMood = G.player.心态; } if (G.player.心态 < G.flags.hiddenFlags.darkestMood) G.flags.hiddenFlags.darkestMood = G.player.心态; }
+    if (stat === '心态') { if (G.player.心态 < G.flags.lowestMood) G.flags.lowestMood = G.player.心态; if (G.player.心态 < G.flags.hiddenFlags.darkestMood) G.flags.hiddenFlags.darkestMood = G.player.心态; }
     if (stat === '社交') { if (G.player.社交 > 80) G.flags.hiddenFlags.社交高 = true; if (G.player.社交 < 40) G.flags.hiddenFlags.社交低 = true; }
-    if (stat === '心态' && G.player.心态 <= 0 && G.flags.identity && G.flags.identity.sp === 'last_dance' && !G.flags.lastDanceTriggered && G.flags.stage === 'contest') { G.flags.lastDanceTriggered = true; G.flags.lastDanceTurns = 3; G.player.心态 = 1; showFloatText('🔥 最后一舞！','#e67e22'); showScene('🔥 最后一舞！\n\n你的心态彻底崩了，但心底的不甘让你爆发了惊人力量。接下来3回合内所有代码力消耗减半！',[{text:'继续战斗', action:function(){ contestRound(); }}]); return; }
-    if (stat === '心态' && G.player.心态 < 30 && G.flags.identity && G.flags.identity.sp === 'mood_recover' && !G.flags.moodRecoverUsed) { G.flags.moodRecoverUsed = true; updStat('心态', 20); addLog('💪 心态自动回复20点！'); }
+    if (stat === '心态' && G.player.心态 <= 0 && G.flags.identity && G.flags.identity.sp === 'last_dance' && !G.flags.lastDanceTriggered && G.flags.stage === 'contest') {
+        G.flags.lastDanceTriggered = true; G.flags.lastDanceTurns = 3; G.player.心态 = 1; showFloatText('🔥 最后一舞！','#e67e22'); showScene('🔥 最后一舞！\n\n你的心态彻底崩了，但心底的不甘让你爆发了惊人力量。接下来3回合内所有代码力消耗减半！',[{text:'继续战斗', action:function(){ contestRound(); }}]); return;
+    }
+    if (stat === '心态' && G.player.心态 < 30 && G.flags.identity && G.flags.identity.sp === 'mood_recover' && !G.flags.moodRecoverUsed) {
+        G.flags.moodRecoverUsed = true; updStat('心态', 20); addLog('💪 心态自动回复20点！');
+    }
 }
 
 function addScore(d) { if (G.flags.gameOver) return; if (d > 0 && G.flags.identity && G.flags.identity.sp === 'score_boost') d = Math.floor(d * 1.2); var cap = 100; if (d < 0) { G.flags.cScore += d; G.flags.cProbScore = Math.max(0, G.flags.cProbScore + d); return; } if (G.flags.curProbBonus) d = Math.floor(d * 1.15); var room = Math.max(0, cap - Math.max(0, G.flags.cProbScore)); var add = Math.min(d, room); G.flags.cScore += add; G.flags.cProbScore += add; }
-function useItem(type) { var idx = G.flags.items.indexOf(type); if (idx === -1) return false; G.flags.items.splice(idx, 1); var mul = getDiff().itemEffectMul || 1; switch(type) { case '免死金牌': updStat('心态', Math.floor(20*mul)); break; case '咖啡': updStat('代码力', Math.floor(25*mul)); break; case '小抄': addScore(Math.floor(30*mul)); break; case '幸运符': addScore(Math.floor(15*mul)); break; } addLog('🎒主动使用道具：' + type); updateDisplay(); return true; }
-function showItemUseOptions(next) { if (G.flags.items.length === 0) { next(); return; } var choices = G.flags.items.map(function(item) { return { text:'使用 ' + item, action: function() { useItem(item); showItemUseOptions(next); } }; }); choices.push({text:'不使用道具', action: function(){ next(); } }); showScene('🎒 选择要使用的道具（可连续使用多个）：', choices); }
+function useItem(type) { var idx = G.flags.items.indexOf(type); if (idx === -1) return false; G.flags.items.splice(idx, 1); var mul = getDiff().itemEffectMul || 1; switch(type) { case '免死金牌': updStat('心态', Math.floor(20*mul)); break; case '咖啡': updStat('代码力', Math.floor(25*mul)); break; case '小抄': addScore(Math.floor(30*mul)); break; case '幸运符': addScore(Math.floor(15*mul)); break; } addLog('🎒主动使用道具：'+type); updateDisplay(); return true; }
+function showItemUseOptions(next) { if (G.flags.items.length === 0) { next(); return; } var choices = G.flags.items.map(function(item){ return { text:'使用 '+item, action: function(){ useItem(item); showItemUseOptions(next); } }; }); choices.push({text:'不使用道具', action: function(){ next(); } }); showScene('🎒 选择要使用的道具（可连续使用多个）：', choices); }
 
-// ===== 完整事件库 =====
+// ===== 事件库（完整）=====
 var TRAIN_EV = {
-    study:[
-        {text: ICON.eventStudy + "你打开洛谷准备刷题，结果网站502。", eff: function(m){ updStat('心态', -Math.floor(3*m.neg)); }, txt: function(m){ return '心态' + predictTrainDelta(-Math.floor(3*m.neg)); } },
-        {text: ICON.eventStudy + "本想刷几道难题，却不知不觉水了10道红题。", eff: function(m){ updStat('代码力', Math.floor(2*m.pos)); updStat('心态', Math.floor(5*m.pos)); updStat('知识', Math.floor(1*m.pos)); }, txt: function(m){ return '代码力+' + predictTrainDelta(Math.floor(2*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(5*m.pos)) + ' 知识+' + predictTrainDelta(Math.floor(1*m.pos)); } },
-        {text: ICON.eventStudy + "你点开一篇题解，发现作者比你小两届，已经拿到了NOI银牌。你沉默了。", eff: function(m){ updStat('心态', -Math.floor(5*m.neg)); updStat('知识', Math.floor(4*m.pos)); }, choices: [
-            {text: function(m){ return '嫉妒地关掉网页 (心态' + predictTrainDelta(-Math.floor(8*m.neg)) + '，社交' + predictTrainDelta(-Math.floor(2*m.neg)) + ')'; }, action: function(cb,m){ updStat('心态', -Math.floor(8*m.neg)); updStat('社交', -Math.floor(2*m.neg)); cb(); } },
-            {text: function(m){ return '受到激励，更努力钻研 (心态' + predictTrainDelta(-Math.floor(3*m.neg)) + '，知识+' + predictTrainDelta(Math.floor(6*m.pos)) + ')'; }, action: function(cb,m){ updStat('心态', -Math.floor(3*m.neg)); updStat('知识', Math.floor(6*m.pos)); cb(); } }
+    study: [
+        {text: ICON.eventStudy+"你打开洛谷准备刷题，结果网站502。", eff: function(m){ updStat('心态', -Math.floor(3*m.neg)); }, txt: function(m){ return '心态'+predictTrainDelta(-Math.floor(3*m.neg)); } },
+        {text: ICON.eventStudy+"本想刷几道难题，却不知不觉水了10道红题。", eff: function(m){ updStat('代码力', Math.floor(2*m.pos)); updStat('心态', Math.floor(5*m.pos)); updStat('知识', Math.floor(1*m.pos)); }, txt: function(m){ return '代码力+'+predictTrainDelta(Math.floor(2*m.pos))+' 心态+'+predictTrainDelta(Math.floor(5*m.pos))+' 知识+'+predictTrainDelta(Math.floor(1*m.pos)); } },
+        {text: ICON.eventStudy+"你点开一篇题解，发现作者比你小两届，已经拿到了NOI银牌。你沉默了。", eff: function(m){ updStat('心态', -Math.floor(5*m.neg)); updStat('知识', Math.floor(4*m.pos)); }, choices: [
+            {text: function(m){ return '嫉妒地关掉网页 (心态'+predictTrainDelta(-Math.floor(8*m.neg))+'，社交'+predictTrainDelta(-Math.floor(2*m.neg))+')'; }, action: function(cb,m){ updStat('心态', -Math.floor(8*m.neg)); updStat('社交', -Math.floor(2*m.neg)); cb(); } },
+            {text: function(m){ return '受到激励，更努力钻研 (心态'+predictTrainDelta(-Math.floor(3*m.neg))+'，知识+'+predictTrainDelta(Math.floor(6*m.pos))+')'; }, action: function(cb,m){ updStat('心态', -Math.floor(3*m.neg)); updStat('知识', Math.floor(6*m.pos)); cb(); } }
         ] },
-        {text: ICON.eventStudy + "一道调了三天没过的题突然AC了！", eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); updStat('心态', Math.floor(8*m.pos)); }, txt: function(m){ return '代码力+' + predictTrainDelta(Math.floor(3*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(8*m.pos)); } },
-        {text: ICON.eventStudy + "你连交5发都WA，最后发现是数组越界。", eff: function(m){ updStat('心态', -Math.floor(8*m.neg)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '心态' + predictTrainDelta(-Math.floor(8*m.neg)) + ' 知识+' + predictTrainDelta(Math.floor(2*m.pos)); } },
-        {text: ICON.eventStudy + "洛谷月赛排名前10%，你收到了官方私信鼓励。", eff: function(m){ updStat('社交', Math.floor(5*m.pos)); updStat('心态', Math.floor(4*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(5*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(4*m.pos)); } }
+        {text: ICON.eventStudy+"一道调了三天没过的题突然AC了！", eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); updStat('心态', Math.floor(8*m.pos)); }, txt: function(m){ return '代码力+'+predictTrainDelta(Math.floor(3*m.pos))+' 心态+'+predictTrainDelta(Math.floor(8*m.pos)); } },
+        {text: ICON.eventStudy+"你连交5发都WA，最后发现是数组越界。", eff: function(m){ updStat('心态', -Math.floor(8*m.neg)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '心态'+predictTrainDelta(-Math.floor(8*m.neg))+' 知识+'+predictTrainDelta(Math.floor(2*m.pos)); } },
+        {text: ICON.eventStudy+"洛谷月赛排名前10%，你收到了官方私信鼓励。", eff: function(m){ updStat('社交', Math.floor(5*m.pos)); updStat('心态', Math.floor(4*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(5*m.pos))+' 心态+'+predictTrainDelta(Math.floor(4*m.pos)); } }
     ],
-    deep:[
-        {text: ICON.eventDeep + "你花了整个下午啃了三篇论文，突然理解了网络流的本质。", eff: function(m){ updStat('知识', Math.floor(6*m.pos)); updStat('心态', Math.floor(3*m.pos)); }, txt: function(m){ return '知识+' + predictTrainDelta(Math.floor(6*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(3*m.pos)); } },
-        {text: ICON.eventDeep + "你觉得自己掌握了，一上手写代码就错。越学越懵。", eff: function(m){ updStat('知识', Math.floor(1*m.pos)); updStat('心态', -Math.floor(6*m.neg)); }, choices: [
-            {text: function(m){ return '立刻找人请教 (社交+' + predictTrainDelta(Math.floor(4*m.pos)) + '，知识+' + predictTrainDelta(Math.floor(3*m.pos)) + ')'; }, action: function(cb,m){ updStat('社交', Math.floor(4*m.pos)); updStat('知识', Math.floor(3*m.pos)); cb(); } },
-            {text: function(m){ return '自己硬啃到深夜 (知识+' + predictTrainDelta(Math.floor(1*m.pos)) + '，心态' + predictTrainDelta(-Math.floor(6*m.neg)) + '，代码力+' + predictTrainDelta(Math.floor(3*m.pos)) + ')'; }, action: function(cb,m){ updStat('知识', Math.floor(1*m.pos)); updStat('心态', -Math.floor(6*m.neg)); updStat('代码力', Math.floor(3*m.pos)); cb(); } }
+    deep: [
+        {text: ICON.eventDeep+"你花了整个下午啃了三篇论文，突然理解了网络流的本质。", eff: function(m){ updStat('知识', Math.floor(6*m.pos)); updStat('心态', Math.floor(3*m.pos)); }, txt: function(m){ return '知识+'+predictTrainDelta(Math.floor(6*m.pos))+' 心态+'+predictTrainDelta(Math.floor(3*m.pos)); } },
+        {text: ICON.eventDeep+"你觉得自己掌握了，一上手写代码就错。越学越懵。", eff: function(m){ updStat('知识', Math.floor(1*m.pos)); updStat('心态', -Math.floor(6*m.neg)); }, choices: [
+            {text: function(m){ return '立刻找人请教 (社交+'+predictTrainDelta(Math.floor(4*m.pos))+'，知识+'+predictTrainDelta(Math.floor(3*m.pos))+')'; }, action: function(cb,m){ updStat('社交', Math.floor(4*m.pos)); updStat('知识', Math.floor(3*m.pos)); cb(); } },
+            {text: function(m){ return '自己硬啃到深夜 (知识+'+predictTrainDelta(Math.floor(1*m.pos))+'，心态'+predictTrainDelta(-Math.floor(6*m.neg))+'，代码力+'+predictTrainDelta(Math.floor(3*m.pos))+')'; }, action: function(cb,m){ updStat('知识', Math.floor(1*m.pos)); updStat('心态', -Math.floor(6*m.neg)); updStat('代码力', Math.floor(3*m.pos)); cb(); } }
         ] },
-        {text: ICON.eventDeep + "一位高年级的OIer主动过来给你讲题。", eff: function(m){ updStat('社交', Math.floor(5*m.pos)); updStat('知识', Math.floor(4*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(5*m.pos)) + ' 知识+' + predictTrainDelta(Math.floor(4*m.pos)); } },
-        {text: ICON.eventDeep + "教练给你额外布置了20道专项训练题。", eff: function(m){ updStat('代码力', Math.floor(4*m.pos)); updStat('心态', -Math.floor(3*m.neg)); }, txt: function(m){ return '代码力+' + predictTrainDelta(Math.floor(4*m.pos)) + ' 心态' + predictTrainDelta(-Math.floor(3*m.neg)); } }
+        {text: ICON.eventDeep+"一位高年级的OIer主动过来给你讲题。", eff: function(m){ updStat('社交', Math.floor(5*m.pos)); updStat('知识', Math.floor(4*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(5*m.pos))+' 知识+'+predictTrainDelta(Math.floor(4*m.pos)); } },
+        {text: ICON.eventDeep+"教练给你额外布置了20道专项训练题。", eff: function(m){ updStat('代码力', Math.floor(4*m.pos)); updStat('心态', -Math.floor(3*m.neg)); }, txt: function(m){ return '代码力+'+predictTrainDelta(Math.floor(4*m.pos))+' 心态'+predictTrainDelta(-Math.floor(3*m.neg)); } }
     ],
-    social:[
-        {text: ICON.eventSocial + "你和同学比谁先AC一道题，你赢了。", eff: function(m){ updStat('社交', Math.floor(4*m.pos)); updStat('心态', Math.floor(6*m.pos)); updStat('代码力', Math.floor(1*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(4*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(6*m.pos)) + ' 代码力+' + predictTrainDelta(Math.floor(1*m.pos)); } },
-        {text: ICON.eventSocial + "你给隔壁班的女生讲了一道算法题。", eff: function(m){ updStat('社交', Math.floor(6*m.pos)); updStat('心态', -Math.floor(2*m.neg)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(6*m.pos)) + ' 心态' + predictTrainDelta(-Math.floor(2*m.neg)); } },
-        {text: ICON.eventSocial + "傍晚跑步时偶遇教练，他考你一道题，你答对了。", eff: function(m){ updStat('心态', Math.floor(5*m.pos)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '心态+' + predictTrainDelta(Math.floor(5*m.pos)) + ' 知识+' + predictTrainDelta(Math.floor(2*m.pos)); } },
-        {text: ICON.eventSocial + "机房团建，边吃边聊未来想去的大学。", eff: function(m){ updStat('社交', Math.floor(8*m.pos)); updStat('心态', Math.floor(4*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(8*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(4*m.pos)); } }
+    social: [
+        {text: ICON.eventSocial+"你和同学比谁先AC一道题，你赢了。", eff: function(m){ updStat('社交', Math.floor(4*m.pos)); updStat('心态', Math.floor(6*m.pos)); updStat('代码力', Math.floor(1*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(4*m.pos))+' 心态+'+predictTrainDelta(Math.floor(6*m.pos))+' 代码力+'+predictTrainDelta(Math.floor(1*m.pos)); } },
+        {text: ICON.eventSocial+"你给隔壁班的女生讲了一道算法题。", eff: function(m){ updStat('社交', Math.floor(6*m.pos)); updStat('心态', -Math.floor(2*m.neg)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(6*m.pos))+' 心态'+predictTrainDelta(-Math.floor(2*m.neg)); } },
+        {text: ICON.eventSocial+"傍晚跑步时偶遇教练，他考你一道题，你答对了。", eff: function(m){ updStat('心态', Math.floor(5*m.pos)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '心态+'+predictTrainDelta(Math.floor(5*m.pos))+' 知识+'+predictTrainDelta(Math.floor(2*m.pos)); } },
+        {text: ICON.eventSocial+"机房团建，边吃边聊未来想去的大学。", eff: function(m){ updStat('社交', Math.floor(8*m.pos)); updStat('心态', Math.floor(4*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(8*m.pos))+' 心态+'+predictTrainDelta(Math.floor(4*m.pos)); } }
     ],
-    sleep:[
-        {text: ICON.eventSleep + "你躺了两小时没睡着，第二天头昏脑涨。", eff: function(m){ updStat('代码力', -Math.floor(2*m.neg)); updStat('心态', -Math.floor(4*m.neg)); }, txt: function(m){ return '代码力' + predictTrainDelta(-Math.floor(2*m.neg)) + ' 心态' + predictTrainDelta(-Math.floor(4*m.neg)); } },
-        {text: ICON.eventSleep + "你梦见自己AK了省选。", eff: function(m){ updStat('心态', Math.floor(8*m.pos)); }, txt: function(m){ return '心态+' + predictTrainDelta(Math.floor(8*m.pos)); } },
-        {text: ICON.eventSleep + "周末想睡个懒觉，忘了关闹钟。早起多刷了两道题。", eff: function(m){ updStat('代码力', Math.floor(1*m.pos)); updStat('心态', -Math.floor(2*m.neg)); }, txt: function(m){ return '代码力+' + predictTrainDelta(Math.floor(1*m.pos)) + ' 心态' + predictTrainDelta(-Math.floor(2*m.neg)); } }
+    sleep: [
+        {text: ICON.eventSleep+"你躺了两小时没睡着，第二天头昏脑涨。", eff: function(m){ updStat('代码力', -Math.floor(2*m.neg)); updStat('心态', -Math.floor(4*m.neg)); }, txt: function(m){ return '代码力'+predictTrainDelta(-Math.floor(2*m.neg))+' 心态'+predictTrainDelta(-Math.floor(4*m.neg)); } },
+        {text: ICON.eventSleep+"你梦见自己AK了省选。", eff: function(m){ updStat('心态', Math.floor(8*m.pos)); }, txt: function(m){ return '心态+'+predictTrainDelta(Math.floor(8*m.pos)); } },
+        {text: ICON.eventSleep+"周末想睡个懒觉，忘了关闹钟。早起多刷了两道题。", eff: function(m){ updStat('代码力', Math.floor(1*m.pos)); updStat('心态', -Math.floor(2*m.neg)); }, txt: function(m){ return '代码力+'+predictTrainDelta(Math.floor(1*m.pos))+' 心态'+predictTrainDelta(-Math.floor(2*m.neg)); } }
     ],
-    retire:[
-        {text: ICON.eventRetire + "深夜刷到一篇退役记，眼泪掉了下来。", eff: function(m){ updStat('心态', -Math.floor(8*m.neg)); }, choices: [
-            {text: function(m){ return '关掉电脑，去操场跑了十圈 (心态' + predictTrainDelta(-Math.floor(5*m.neg)) + '，代码力+' + predictTrainDelta(Math.floor(3*m.pos)) + ')'; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('代码力', Math.floor(3*m.pos)); cb(); } },
-            {text: function(m){ return '继续看完，写下感想 (心态' + predictTrainDelta(-Math.floor(12*m.neg)) + '，知识+' + predictTrainDelta(Math.floor(4*m.pos)) + ')'; }, action: function(cb,m){ updStat('心态', -Math.floor(12*m.neg)); updStat('知识', Math.floor(4*m.pos)); cb(); } }
+    retire: [
+        {text: ICON.eventRetire+"深夜刷到一篇退役记，眼泪掉了下来。", eff: function(m){ updStat('心态', -Math.floor(8*m.neg)); }, choices: [
+            {text: function(m){ return '关掉电脑，去操场跑了十圈 (心态'+predictTrainDelta(-Math.floor(5*m.neg))+'，代码力+'+predictTrainDelta(Math.floor(3*m.pos))+')'; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('代码力', Math.floor(3*m.pos)); cb(); } },
+            {text: function(m){ return '继续看完，写下感想 (心态'+predictTrainDelta(-Math.floor(12*m.neg))+'，知识+'+predictTrainDelta(Math.floor(4*m.pos))+')'; }, action: function(cb,m){ updStat('心态', -Math.floor(12*m.neg)); updStat('知识', Math.floor(4*m.pos)); cb(); } }
         ] },
-        {text: ICON.eventRetire + "读到一篇NOI金牌经验分享，热血沸腾。", eff: function(m){ updStat('心态', Math.floor(6*m.pos)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '心态+' + predictTrainDelta(Math.floor(6*m.pos)) + ' 知识+' + predictTrainDelta(Math.floor(2*m.pos)); } },
-        {text: ICON.eventRetire + "一口气看了三篇失败的退役记，越看越丧。", eff: function(m){ updStat('心态', -Math.floor(12*m.neg)); }, txt: function(m){ return '心态' + predictTrainDelta(-Math.floor(12*m.neg)); } }
+        {text: ICON.eventRetire+"读到一篇NOI金牌经验分享，热血沸腾。", eff: function(m){ updStat('心态', Math.floor(6*m.pos)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '心态+'+predictTrainDelta(Math.floor(6*m.pos))+' 知识+'+predictTrainDelta(Math.floor(2*m.pos)); } },
+        {text: ICON.eventRetire+"一口气看了三篇失败的退役记，越看越丧。", eff: function(m){ updStat('心态', -Math.floor(12*m.neg)); }, txt: function(m){ return '心态'+predictTrainDelta(-Math.floor(12*m.neg)); } }
     ],
-    // ===== 冬令营事件池（15个，已包含联动和随机加成） =====
     wc: [
-        // 原有 5 个
-        {text: ICON.eventWC + "冬令营里，一位NOI金牌得主现场分享了他的训练计划，你赶紧记了下来。", eff: function(m){ updStat('知识', Math.floor(10*m.pos)); updStat('心态', Math.floor(5*m.pos)); }, txt: function(m){ return '知识+' + predictTrainDelta(Math.floor(10*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(5*m.pos)); }, quality:2,
-         bonus: { chance: 0.25, eff: function(m){ updStat('知识', Math.floor(4*m.pos)); }, txt: '✨ 额外记录了一些细节，知识+4' } },
-        {text: ICON.eventWC + "你参加了模拟赛，和集训队选手同场竞技，差距让你清醒，但也让你更有动力。", eff: function(m){ updStat('代码力', Math.floor(5*m.pos)); updStat('心态', Math.floor(3*m.pos)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '代码力+' + predictTrainDelta(Math.floor(5*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(3*m.pos)) + ' 知识+' + predictTrainDelta(Math.floor(2*m.pos)); }, quality:2,
-         link: { requires: ['难题', '讲题'], eff: function(m){ updStat('代码力', Math.floor(4*m.pos)); }, txt: '🔗 之前练过类似题目，代码力额外+4' } },
-        {text: ICON.eventWC + "晚上和室友聊起未来的规划，发现原来大家都一样迷茫，但也一样坚定。", eff: function(m){ updStat('社交', Math.floor(8*m.pos)); updStat('心态', Math.floor(6*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(8*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(6*m.pos)); }, quality:1,
-         bonus: { chance: 0.3, eff: function(m){ updStat('心态', Math.floor(4*m.pos)); }, txt: '✨ 得到室友的鼓励，心态额外+4' } },
-        {text: ICON.eventWC + "WC期间，你得到一位国家队教练的单独指导，受益匪浅。", eff: function(m){ updStat('知识', Math.floor(12*m.pos)); updStat('代码力', Math.floor(3*m.pos)); }, txt: function(m){ return '知识+' + predictTrainDelta(Math.floor(12*m.pos)) + ' 代码力+' + predictTrainDelta(Math.floor(3*m.pos)); }, quality:2,
-         link: { requires: ['模拟赛'], eff: function(m){ updStat('知识', Math.floor(5*m.pos)); }, txt: '🔗 结合模拟赛的问题，指导更具针对性，知识额外+5' } },
-        {text: ICON.eventWC + "你在冬令营的交流赛里发挥失常，但队友的鼓励让你重新振作。", eff: function(m){ updStat('心态', -Math.floor(5*m.neg)); updStat('社交', Math.floor(4*m.pos)); updStat('代码力', Math.floor(2*m.pos)); }, txt: function(m){ return '心态' + predictTrainDelta(-Math.floor(5*m.neg)) + ' 社交+' + predictTrainDelta(Math.floor(4*m.pos)) + ' 代码力+' + predictTrainDelta(Math.floor(2*m.pos)); }, quality:1,
-         bonus: { chance: 0.3, eff: function(m){ updStat('知识', Math.floor(8*m.pos)); }, txt: '✨ 赛后复盘顿悟，知识+8' },
-         link: { requires: ['模拟赛', '难题'], eff: function(m){ updStat('心态', Math.floor(6*m.pos)); }, txt: '🔗 之前经过磨砺，心态更坚韧，额外+6' } },
-        // 新增 5 个
-        {text: ICON.eventWC + "你主动找教练请教了一个困扰已久的算法问题。", eff: function(m){ updStat('知识', Math.floor(6*m.pos)); updStat('心态', Math.floor(2*m.pos)); }, txt: function(m){ return '知识+' + predictTrainDelta(Math.floor(6*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(2*m.pos)); }, quality:2,
-         bonus: { chance: 0.2, eff: function(m){ updStat('知识', Math.floor(3*m.pos)); }, txt: '✨ 教练额外补充了例题，知识+3' } },
-        {text: ICON.eventWC + "你组织了一场小型讨论会，和大家交流了最近的训练心得。", eff: function(m){ updStat('社交', Math.floor(8*m.pos)); updStat('知识', Math.floor(3*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(8*m.pos)) + ' 知识+' + predictTrainDelta(Math.floor(3*m.pos)); }, quality:1,
-         link: { requires: ['讲题'], eff: function(m){ updStat('知识', Math.floor(4*m.pos)); }, txt: '🔗 在讲题后组织讨论，知识额外+4' } },
-        {text: ICON.eventWC + "你利用午休时间补了觉，下午精神焕发。", eff: function(m){ updStat('代码力', Math.floor(5*m.pos)); updStat('心态', Math.floor(8*m.pos)); }, txt: function(m){ return '代码力+' + predictTrainDelta(Math.floor(5*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(8*m.pos)); }, quality:1,
-         bonus: { chance: 0.4, eff: function(m){ updStat('心态', Math.floor(5*m.pos)); }, txt: '✨ 睡得很香，心态额外+5' },
-         link: { requires: ['晨跑'], eff: function(m){ updStat('代码力', Math.floor(4*m.pos)); }, txt: '🔗 晨跑后补觉效果加倍，代码力额外+4' } },
-        {text: ICON.eventWC + "你在冬令营的晚间自习中独立解出了一道难题。", eff: function(m){ updStat('代码力', Math.floor(4*m.pos)); updStat('知识', Math.floor(4*m.pos)); updStat('心态', Math.floor(3*m.pos)); }, txt: function(m){ return '代码力+' + predictTrainDelta(Math.floor(4*m.pos)) + ' 知识+' + predictTrainDelta(Math.floor(4*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(3*m.pos)); }, quality:2,
-         bonus: { chance: 0.2, eff: function(m){ updStat('代码力', Math.floor(6*m.pos)); }, txt: '✨ 解法被老师表扬，代码力额外+6' },
-         link: { requires: ['讲题', '讨论会'], eff: function(m){ updStat('知识', Math.floor(5*m.pos)); }, txt: '🔗 之前交流的思路帮你打开了新视角，知识额外+5' } },
-        {text: ICON.eventWC + "你给同学讲解了一道题，收获了满满的感谢。", eff: function(m){ updStat('社交', Math.floor(6*m.pos)); updStat('心态', Math.floor(4*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(6*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(4*m.pos)); }, quality:1,
-         bonus: { chance: 0.25, eff: function(m){ updStat('社交', Math.floor(3*m.pos)); }, txt: '✨ 讲解非常清晰，社交额外+3' },
-         link: { requires: ['讨论会'], eff: function(m){ updStat('知识', Math.floor(3*m.pos)); }, txt: '🔗 在讨论会中梳理过，知识额外+3' } },
-        // 再新增 5 个（补足 15 个）
-        {text: ICON.eventWC + "你和室友深夜复盘了今天的模拟赛录像，发现了自己的思维盲点。", eff: function(m){ updStat('社交', Math.floor(5*m.pos)); updStat('知识', Math.floor(4*m.pos)); updStat('心态', Math.floor(2*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(5*m.pos)) + ' 知识+' + predictTrainDelta(Math.floor(4*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(2*m.pos)); }, quality:2,
-         bonus: { chance: 0.3, eff: function(m){ updStat('知识', Math.floor(4*m.pos)); }, txt: '✨ 复盘中发现更多细节，知识+4' },
-         link: { requires: ['模拟赛'], eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); }, txt: '🔗 有了模拟赛经验，复盘更深入，代码力+3' } },
-        {text: ICON.eventWC + "冬令营组织晨跑，你坚持跑完了全程，神清气爽。", eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); updStat('心态', Math.floor(6*m.pos)); updStat('社交', Math.floor(2*m.pos)); }, txt: function(m){ return '代码力+' + predictTrainDelta(Math.floor(3*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(6*m.pos)) + ' 社交+' + predictTrainDelta(Math.floor(2*m.pos)); }, quality:1,
-         bonus: { chance: 0.35, eff: function(m){ updStat('心态', Math.floor(4*m.pos)); }, txt: '✨ 晨跑后精神极佳，心态+4' },
-         link: { requires: ['补觉'], eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); }, txt: '🔗 补觉后晨跑更有精力，代码力+3' } },
-        {text: ICON.eventWC + "你收到家里寄来的鼓励信，眼眶一热。", eff: function(m){ updStat('心态', Math.floor(10*m.pos)); }, txt: function(m){ return '心态+' + predictTrainDelta(Math.floor(10*m.pos)); }, quality:1,
-         bonus: { chance: 0.2, eff: function(m){ updStat('心态', Math.floor(4*m.pos)); }, txt: '✨ 信中夹带了一张小卡片，心态额外+4' } },
-        {text: ICON.eventWC + "你旁听了国家集训队选手的讲评，学到了很多新技巧。", eff: function(m){ updStat('知识', Math.floor(8*m.pos)); updStat('心态', Math.floor(3*m.pos)); }, txt: function(m){ return '知识+' + predictTrainDelta(Math.floor(8*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(3*m.pos)); }, quality:2,
-         link: { requires: ['难题'], eff: function(m){ updStat('知识', Math.floor(5*m.pos)); }, txt: '🔗 结合之前的难题，理解更透彻，知识+5' } },
-        {text: ICON.eventWC + "冬令营联欢晚会上，你上台表演了一个节目，赢得满堂喝彩。", eff: function(m){ updStat('社交', Math.floor(10*m.pos)); updStat('心态', Math.floor(5*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(10*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(5*m.pos)); }, quality:1,
-         bonus: { chance: 0.3, eff: function(m){ updStat('社交', Math.floor(4*m.pos)); }, txt: '✨ 表演太精彩，社交额外+4' } }
+        {text: ICON.eventWC+"冬令营里，一位NOI金牌得主现场分享了他的训练计划，你赶紧记了下来。", eff: function(m){ updStat('知识', Math.floor(10*m.pos)); updStat('心态', Math.floor(5*m.pos)); }, txt: function(m){ return '知识+'+predictTrainDelta(Math.floor(10*m.pos))+' 心态+'+predictTrainDelta(Math.floor(5*m.pos)); }, quality:2, bonus: { chance: 0.25, eff: function(m){ updStat('知识', Math.floor(4*m.pos)); }, txt: '✨ 额外记录了一些细节，知识+4' } },
+        {text: ICON.eventWC+"你参加了模拟赛，和集训队选手同场竞技，差距让你清醒，但也让你更有动力。", eff: function(m){ updStat('代码力', Math.floor(5*m.pos)); updStat('心态', Math.floor(3*m.pos)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '代码力+'+predictTrainDelta(Math.floor(5*m.pos))+' 心态+'+predictTrainDelta(Math.floor(3*m.pos))+' 知识+'+predictTrainDelta(Math.floor(2*m.pos)); }, quality:2, link: { requires: ['难题', '讲题'], eff: function(m){ updStat('代码力', Math.floor(4*m.pos)); }, txt: '🔗 之前练过类似题目，代码力额外+4' } },
+        {text: ICON.eventWC+"晚上和室友聊起未来的规划，发现原来大家都一样迷茫，但也一样坚定。", eff: function(m){ updStat('社交', Math.floor(8*m.pos)); updStat('心态', Math.floor(6*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(8*m.pos))+' 心态+'+predictTrainDelta(Math.floor(6*m.pos)); }, quality:1, bonus: { chance: 0.3, eff: function(m){ updStat('心态', Math.floor(4*m.pos)); }, txt: '✨ 得到室友的鼓励，心态额外+4' } },
+        {text: ICON.eventWC+"WC期间，你得到一位国家队教练的单独指导，受益匪浅。", eff: function(m){ updStat('知识', Math.floor(12*m.pos)); updStat('代码力', Math.floor(3*m.pos)); }, txt: function(m){ return '知识+'+predictTrainDelta(Math.floor(12*m.pos))+' 代码力+'+predictTrainDelta(Math.floor(3*m.pos)); }, quality:2, link: { requires: ['模拟赛'], eff: function(m){ updStat('知识', Math.floor(5*m.pos)); }, txt: '🔗 结合模拟赛的问题，指导更具针对性，知识额外+5' } },
+        {text: ICON.eventWC+"你在冬令营的交流赛里发挥失常，但队友的鼓励让你重新振作。", eff: function(m){ updStat('心态', -Math.floor(5*m.neg)); updStat('社交', Math.floor(4*m.pos)); updStat('代码力', Math.floor(2*m.pos)); }, txt: function(m){ return '心态'+predictTrainDelta(-Math.floor(5*m.neg))+' 社交+'+predictTrainDelta(Math.floor(4*m.pos))+' 代码力+'+predictTrainDelta(Math.floor(2*m.pos)); }, quality:1, bonus: { chance: 0.3, eff: function(m){ updStat('知识', Math.floor(8*m.pos)); }, txt: '✨ 赛后复盘顿悟，知识+8' }, link: { requires: ['模拟赛', '难题'], eff: function(m){ updStat('心态', Math.floor(6*m.pos)); }, txt: '🔗 之前经过磨砺，心态更坚韧，额外+6' } },
+        {text: ICON.eventWC+"你主动找教练请教了一个困扰已久的算法问题。", eff: function(m){ updStat('知识', Math.floor(6*m.pos)); updStat('心态', Math.floor(2*m.pos)); }, txt: function(m){ return '知识+'+predictTrainDelta(Math.floor(6*m.pos))+' 心态+'+predictTrainDelta(Math.floor(2*m.pos)); }, quality:2, bonus: { chance: 0.2, eff: function(m){ updStat('知识', Math.floor(3*m.pos)); }, txt: '✨ 教练额外补充了例题，知识+3' } },
+        {text: ICON.eventWC+"你组织了一场小型讨论会，和大家交流了最近的训练心得。", eff: function(m){ updStat('社交', Math.floor(8*m.pos)); updStat('知识', Math.floor(3*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(8*m.pos))+' 知识+'+predictTrainDelta(Math.floor(3*m.pos)); }, quality:1, link: { requires: ['讲题'], eff: function(m){ updStat('知识', Math.floor(4*m.pos)); }, txt: '🔗 在讲题后组织讨论，知识额外+4' } },
+        {text: ICON.eventWC+"你利用午休时间补了觉，下午精神焕发。", eff: function(m){ updStat('代码力', Math.floor(5*m.pos)); updStat('心态', Math.floor(8*m.pos)); }, txt: function(m){ return '代码力+'+predictTrainDelta(Math.floor(5*m.pos))+' 心态+'+predictTrainDelta(Math.floor(8*m.pos)); }, quality:1, bonus: { chance: 0.4, eff: function(m){ updStat('心态', Math.floor(5*m.pos)); }, txt: '✨ 睡得很香，心态额外+5' }, link: { requires: ['晨跑'], eff: function(m){ updStat('代码力', Math.floor(4*m.pos)); }, txt: '🔗 晨跑后补觉效果加倍，代码力额外+4' } },
+        {text: ICON.eventWC+"你在冬令营的晚间自习中独立解出了一道难题。", eff: function(m){ updStat('代码力', Math.floor(4*m.pos)); updStat('知识', Math.floor(4*m.pos)); updStat('心态', Math.floor(3*m.pos)); }, txt: function(m){ return '代码力+'+predictTrainDelta(Math.floor(4*m.pos))+' 知识+'+predictTrainDelta(Math.floor(4*m.pos))+' 心态+'+predictTrainDelta(Math.floor(3*m.pos)); }, quality:2, bonus: { chance: 0.2, eff: function(m){ updStat('代码力', Math.floor(6*m.pos)); }, txt: '✨ 解法被老师表扬，代码力额外+6' }, link: { requires: ['讲题', '讨论会'], eff: function(m){ updStat('知识', Math.floor(5*m.pos)); }, txt: '🔗 之前交流的思路帮你打开了新视角，知识额外+5' } },
+        {text: ICON.eventWC+"你给同学讲解了一道题，收获了满满的感谢。", eff: function(m){ updStat('社交', Math.floor(6*m.pos)); updStat('心态', Math.floor(4*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(6*m.pos))+' 心态+'+predictTrainDelta(Math.floor(4*m.pos)); }, quality:1, bonus: { chance: 0.25, eff: function(m){ updStat('社交', Math.floor(3*m.pos)); }, txt: '✨ 讲解非常清晰，社交额外+3' }, link: { requires: ['讨论会'], eff: function(m){ updStat('知识', Math.floor(3*m.pos)); }, txt: '🔗 在讨论会中梳理过，知识额外+3' } },
+        {text: ICON.eventWC+"你和室友深夜复盘了今天的模拟赛录像，发现了自己的思维盲点。", eff: function(m){ updStat('社交', Math.floor(5*m.pos)); updStat('知识', Math.floor(4*m.pos)); updStat('心态', Math.floor(2*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(5*m.pos))+' 知识+'+predictTrainDelta(Math.floor(4*m.pos))+' 心态+'+predictTrainDelta(Math.floor(2*m.pos)); }, quality:2, bonus: { chance: 0.3, eff: function(m){ updStat('知识', Math.floor(4*m.pos)); }, txt: '✨ 复盘中发现更多细节，知识+4' }, link: { requires: ['模拟赛'], eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); }, txt: '🔗 有了模拟赛经验，复盘更深入，代码力+3' } },
+        {text: ICON.eventWC+"冬令营组织晨跑，你坚持跑完了全程，神清气爽。", eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); updStat('心态', Math.floor(6*m.pos)); updStat('社交', Math.floor(2*m.pos)); }, txt: function(m){ return '代码力+'+predictTrainDelta(Math.floor(3*m.pos))+' 心态+'+predictTrainDelta(Math.floor(6*m.pos))+' 社交+'+predictTrainDelta(Math.floor(2*m.pos)); }, quality:1, bonus: { chance: 0.35, eff: function(m){ updStat('心态', Math.floor(4*m.pos)); }, txt: '✨ 晨跑后精神极佳，心态+4' }, link: { requires: ['补觉'], eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); }, txt: '🔗 补觉后晨跑更有精力，代码力+3' } },
+        {text: ICON.eventWC+"你收到家里寄来的鼓励信，眼眶一热。", eff: function(m){ updStat('心态', Math.floor(10*m.pos)); }, txt: function(m){ return '心态+'+predictTrainDelta(Math.floor(10*m.pos)); }, quality:1, bonus: { chance: 0.2, eff: function(m){ updStat('心态', Math.floor(4*m.pos)); }, txt: '✨ 信中夹带了一张小卡片，心态额外+4' } },
+        {text: ICON.eventWC+"你旁听了国家集训队选手的讲评，学到了很多新技巧。", eff: function(m){ updStat('知识', Math.floor(8*m.pos)); updStat('心态', Math.floor(3*m.pos)); }, txt: function(m){ return '知识+'+predictTrainDelta(Math.floor(8*m.pos))+' 心态+'+predictTrainDelta(Math.floor(3*m.pos)); }, quality:2, link: { requires: ['难题'], eff: function(m){ updStat('知识', Math.floor(5*m.pos)); }, txt: '🔗 结合之前的难题，理解更透彻，知识+5' } },
+        {text: ICON.eventWC+"冬令营联欢晚会上，你上台表演了一个节目，赢得满堂喝彩。", eff: function(m){ updStat('社交', Math.floor(10*m.pos)); updStat('心态', Math.floor(5*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(10*m.pos))+' 心态+'+predictTrainDelta(Math.floor(5*m.pos)); }, quality:1, bonus: { chance: 0.3, eff: function(m){ updStat('社交', Math.floor(4*m.pos)); }, txt: '✨ 表演太精彩，社交额外+4' } }
     ]
 };
 
 var CHAR_TRAIN_EV = {
     '退役边缘人':[
-        {text: ICON.eventRetire + "你偶然路过去年的机房，座位空空荡荡。", eff: function(m){ updStat('心态', -Math.floor(3*m.neg)); updStat('知识', Math.floor(4*m.pos)); }, txt: function(m){ return '心态' + predictTrainDelta(-Math.floor(3*m.neg)) + ' 知识+' + predictTrainDelta(Math.floor(4*m.pos)); } },
-        {text: ICON.eventRetire + '去年的教练发来消息："还在坚持吗？"你笑了笑，回了个"嗯"。', eff: function(m){ updStat('心态', Math.floor(8*m.pos)); }, txt: function(m){ return '心态+' + predictTrainDelta(Math.floor(8*m.pos)); } }
+        {text: ICON.eventRetire+"你偶然路过去年的机房，座位空空荡荡。", eff: function(m){ updStat('心态', -Math.floor(3*m.neg)); updStat('知识', Math.floor(4*m.pos)); }, txt: function(m){ return '心态'+predictTrainDelta(-Math.floor(3*m.neg))+' 知识+'+predictTrainDelta(Math.floor(4*m.pos)); } },
+        {text: ICON.eventRetire+'去年的教练发来消息："还在坚持吗？"你笑了笑，回了个"嗯"。', eff: function(m){ updStat('心态', Math.floor(8*m.pos)); }, txt: function(m){ return '心态+'+predictTrainDelta(Math.floor(8*m.pos)); } }
     ],
     '天赋怪':[
-        {text: ICON.eventSocial + '同学私下议论："他就是那个天才吧？好像也没那么神。"你假装没听见。', eff: function(m){ updStat('心态', -Math.floor(5*m.neg)); updStat('社交', -Math.floor(2*m.neg)); }, txt: function(m){ return '心态' + predictTrainDelta(-Math.floor(5*m.neg)) + ' 社交' + predictTrainDelta(-Math.floor(2*m.neg)); } },
-        {text: ICON.eventStudy + "你轻松AC了一道难题，旁边的同学投来羡慕的目光。", eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); updStat('心态', Math.floor(4*m.pos)); }, txt: function(m){ return '代码力+' + predictTrainDelta(Math.floor(3*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(4*m.pos)); } }
+        {text: ICON.eventSocial+'同学私下议论："他就是那个天才吧？好像也没那么神。"你假装没听见。', eff: function(m){ updStat('心态', -Math.floor(5*m.neg)); updStat('社交', -Math.floor(2*m.neg)); }, txt: function(m){ return '心态'+predictTrainDelta(-Math.floor(5*m.neg))+' 社交'+predictTrainDelta(-Math.floor(2*m.neg)); } },
+        {text: ICON.eventStudy+"你轻松AC了一道难题，旁边的同学投来羡慕的目光。", eff: function(m){ updStat('代码力', Math.floor(3*m.pos)); updStat('心态', Math.floor(4*m.pos)); }, txt: function(m){ return '代码力+'+predictTrainDelta(Math.floor(3*m.pos))+' 心态+'+predictTrainDelta(Math.floor(4*m.pos)); } }
     ],
     '刷题机器':[
-        {text: ICON.eventStudy + "你刷完第3000题，看着洛谷上的计数，突然有些空虚。", eff: function(m){ updStat('心态', -Math.floor(4*m.neg)); updStat('知识', Math.floor(3*m.pos)); }, txt: function(m){ return '心态' + predictTrainDelta(-Math.floor(4*m.neg)) + ' 知识+' + predictTrainDelta(Math.floor(3*m.pos)); } },
-        {text: ICON.eventStudy + '题量统计弹窗：恭喜你解锁"题海之王"称号。', eff: function(m){ updStat('心态', Math.floor(5*m.pos)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '心态+' + predictTrainDelta(Math.floor(5*m.pos)) + ' 知识+' + predictTrainDelta(Math.floor(2*m.pos)); } }
+        {text: ICON.eventStudy+"你刷完第3000题，看着洛谷上的计数，突然有些空虚。", eff: function(m){ updStat('心态', -Math.floor(4*m.neg)); updStat('知识', Math.floor(3*m.pos)); }, txt: function(m){ return '心态'+predictTrainDelta(-Math.floor(4*m.neg))+' 知识+'+predictTrainDelta(Math.floor(3*m.pos)); } },
+        {text: ICON.eventStudy+'题量统计弹窗：恭喜你解锁"题海之王"称号。', eff: function(m){ updStat('心态', Math.floor(5*m.pos)); updStat('知识', Math.floor(2*m.pos)); }, txt: function(m){ return '心态+'+predictTrainDelta(Math.floor(5*m.pos))+' 知识+'+predictTrainDelta(Math.floor(2*m.pos)); } }
     ],
     '女队独苗':[
-        {text: ICON.eventSocial + '收到一封匿名的鼓励信："你是我们的骄傲。"鼻子有点酸。', eff: function(m){ updStat('心态', Math.floor(10*m.pos)); }, txt: function(m){ return '心态+' + predictTrainDelta(Math.floor(10*m.pos)); } },
-        {text: ICON.eventSocial + "家长群有人质疑女生学竞赛，你妈妈在群里回怼了。", eff: function(m){ updStat('社交', Math.floor(5*m.pos)); updStat('心态', Math.floor(3*m.pos)); }, txt: function(m){ return '社交+' + predictTrainDelta(Math.floor(5*m.pos)) + ' 心态+' + predictTrainDelta(Math.floor(3*m.pos)); } }
+        {text: ICON.eventSocial+'收到一封匿名的鼓励信："你是我们的骄傲。"鼻子有点酸。', eff: function(m){ updStat('心态', Math.floor(10*m.pos)); }, txt: function(m){ return '心态+'+predictTrainDelta(Math.floor(10*m.pos)); } },
+        {text: ICON.eventSocial+"家长群有人质疑女生学竞赛，你妈妈在群里回怼了。", eff: function(m){ updStat('社交', Math.floor(5*m.pos)); updStat('心态', Math.floor(3*m.pos)); }, txt: function(m){ return '社交+'+predictTrainDelta(Math.floor(5*m.pos))+' 心态+'+predictTrainDelta(Math.floor(3*m.pos)); } }
     ]
 };
 var RIVAL_EV = [
     {text:'📊 省队预定哥路过轻笑一声："还在调这种题？"', choices:[
-        {text: function(m){ return "不理他 (心态+" + predictTrainDelta(Math.floor(2*m.pos)) + ")"; }, action: function(cb,m){ updStat('心态', Math.floor(2*m.pos)); cb(); } },
-        {text: function(m){ return "回怼 (心态" + predictTrainDelta(-Math.floor(5*m.neg)) + "，社交+" + predictTrainDelta(Math.floor(3*m.pos)) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('社交', Math.floor(3*m.pos)); cb(); } }
+        {text: function(m){ return "不理他 (心态+"+predictTrainDelta(Math.floor(2*m.pos))+")"; }, action: function(cb,m){ updStat('心态', Math.floor(2*m.pos)); cb(); } },
+        {text: function(m){ return "回怼 (心态"+predictTrainDelta(-Math.floor(5*m.neg))+"，社交+"+predictTrainDelta(Math.floor(3*m.pos))+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('社交', Math.floor(3*m.pos)); cb(); } }
     ]},
     {text:'🤝 同班兄弟递来一瓶水："加油，一起进省队。"', choices:[
-        {text: function(m){ return "感动收下 (心态+" + predictTrainDelta(Math.floor(8*m.pos)) + "，社交+" + predictTrainDelta(Math.floor(4*m.pos)) + ")"; }, action: function(cb,m){ updStat('心态', Math.floor(8*m.pos)); updStat('社交', Math.floor(4*m.pos)); cb(); } }
+        {text: function(m){ return "感动收下 (心态+"+predictTrainDelta(Math.floor(8*m.pos))+"，社交+"+predictTrainDelta(Math.floor(4*m.pos))+")"; }, action: function(cb,m){ updStat('心态', Math.floor(8*m.pos)); updStat('社交', Math.floor(4*m.pos)); cb(); } }
     ]},
     {text:"👤 神秘大佬坐你旁边，闭目养神。", choices:[
-        {text: function(m){ return "感到安心 (心态+" + predictTrainDelta(Math.floor(5*m.pos)) + ")"; }, action: function(cb,m){ updStat('心态', Math.floor(5*m.pos)); cb(); } },
-        {text: function(m){ return "压力更大 (心态" + predictTrainDelta(-Math.floor(5*m.neg)) + "，代码力+" + predictTrainDelta(Math.floor(3*m.pos)) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('代码力', Math.floor(3*m.pos)); cb(); } }
+        {text: function(m){ return "感到安心 (心态+"+predictTrainDelta(Math.floor(5*m.pos))+")"; }, action: function(cb,m){ updStat('心态', Math.floor(5*m.pos)); cb(); } },
+        {text: function(m){ return "压力更大 (心态"+predictTrainDelta(-Math.floor(5*m.neg))+"，代码力+"+predictTrainDelta(Math.floor(3*m.pos))+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('代码力', Math.floor(3*m.pos)); cb(); } }
     ]}
 ];
 var RAND_EV = [
     {text:"📱手机震动：考规严禁，但万一是急事？", choices:[
         {text: function(m){ return "偷看 (50%是妈妈加油)"; }, action: function(cb,m){ if(Math.random()<0.5) updStat('心态', Math.floor(10*m.pos)); else updStat('心态', -Math.floor(5*m.neg)); cb(); } },
-        {text: function(m){ return "无视 (心态" + (-Math.floor(3*m.neg)) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(3*m.neg)); cb(); } }
+        {text: function(m){ return "无视 (心态"+(-Math.floor(3*m.neg))+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(3*m.neg)); cb(); } }
     ], negative:false },
     {text:"📄草稿纸用完了，你想画个图。", choices:[
         {text: function(m){ return "举手要纸"; }, action: function(cb,m){ cb(); } },
-        {text: function(m){ return "忍忍 (心态" + (-Math.floor(5*m.neg)) + "，知识临时+" + Math.floor(2*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('知识', Math.floor(2*m.pos)); cb(); } }
+        {text: function(m){ return "忍忍 (心态"+(-Math.floor(5*m.neg))+"，知识临时+"+Math.floor(2*m.pos)+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('知识', Math.floor(2*m.pos)); cb(); } }
     ], negative:false },
     {text:"👀监考老师站身后，盯着你的屏幕。", choices:[
-        {text: function(m){ return "继续写 (心态" + (-Math.floor(3*m.neg)) + "，代码力+" + Math.floor(2*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(3*m.neg)); updStat('代码力', Math.floor(2*m.pos)); cb(); } },
-        {text: function(m){ return "停一下 (跳过本回合，心态恢复+" + Math.floor(5*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', Math.floor(5*m.pos)); skipToNextRound(); } }
+        {text: function(m){ return "继续写 (心态"+(-Math.floor(3*m.neg))+"，代码力+"+Math.floor(2*m.pos)+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(3*m.neg)); updStat('代码力', Math.floor(2*m.pos)); cb(); } },
+        {text: function(m){ return "停一下 (跳过本回合，心态恢复+"+Math.floor(5*m.pos)+")"; }, action: function(cb,m){ updStat('心态', Math.floor(5*m.pos)); skipToNextRound(); } }
     ], negative:false },
     {text:"⌨️空格键突然卡住。", choices:[
         {text: function(m){ return "举手求助 (跳过本回合)"; }, action: function(cb,m){ skipToNextRound(); } },
-        {text: function(m){ return "狂按 (代码力" + (-Math.floor(5*m.neg)) + "，继续)"; }, action: function(cb,m){ updStat('代码力', -Math.floor(5*m.neg)); cb(); } }
+        {text: function(m){ return "狂按 (代码力"+(-Math.floor(5*m.neg))+"，继续)"; }, action: function(cb,m){ updStat('代码力', -Math.floor(5*m.neg)); cb(); } }
     ], negative:true },
     {text:"😩旁边人代码全红了，他长叹一口气。", choices:[
-        {text: function(m){ return "暗自庆幸 (心态+" + Math.floor(5*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', Math.floor(5*m.pos)); cb(); } },
-        {text: function(m){ return "感同身受 (心态" + (-Math.floor(2*m.neg)) + "，社交+" + Math.floor(3*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(2*m.neg)); updStat('社交', Math.floor(3*m.pos)); cb(); } }
+        {text: function(m){ return "暗自庆幸 (心态+"+Math.floor(5*m.pos)+")"; }, action: function(cb,m){ updStat('心态', Math.floor(5*m.pos)); cb(); } },
+        {text: function(m){ return "感同身受 (心态"+(-Math.floor(2*m.neg))+"，社交+"+Math.floor(3*m.pos)+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(2*m.neg)); updStat('社交', Math.floor(3*m.pos)); cb(); } }
     ], negative:false },
     {text:"🪟教练站在门口，朝你比手势。", choices:[
-        {text: function(m){ return "竖起大拇指 (心态+" + Math.floor(15*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', Math.floor(15*m.pos)); cb(); } },
-        {text: function(m){ return "摇头 (心态" + (-Math.floor(20*m.neg)) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(20*m.neg)); cb(); } }
+        {text: function(m){ return "竖起大拇指 (心态+"+Math.floor(15*m.pos)+")"; }, action: function(cb,m){ updStat('心态', Math.floor(15*m.pos)); cb(); } },
+        {text: function(m){ return "摇头 (心态"+(-Math.floor(20*m.neg))+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(20*m.neg)); cb(); } }
     ], negative:false },
     {text:"🤢突然肚子疼。", choices:[
-        {text: function(m){ return "忍 (心态" + (-Math.floor(10*m.neg)) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(10*m.neg)); cb(); } },
-        {text: function(m){ return "去厕所 (跳过下1题得0分，心态+" + Math.floor(10*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', Math.floor(10*m.pos)); skipToNextRound(); } }
+        {text: function(m){ return "忍 (心态"+(-Math.floor(10*m.neg))+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(10*m.neg)); cb(); } },
+        {text: function(m){ return "去厕所 (跳过下1题得0分，心态+"+Math.floor(10*m.pos)+")"; }, action: function(cb,m){ updStat('心态', Math.floor(10*m.pos)); skipToNextRound(); } }
     ], negative:true },
     {text:"🎯撞原题！", choices:[
-        {text: function(m){ return "当然是秒了 (本题得分+" + Math.floor(60*m.pos) + "，心态+" + Math.floor(10*m.pos) + ")"; }, action: function(cb,m){ addScore(Math.floor(60*m.pos)); updStat('心态', Math.floor(10*m.pos)); G.flags.hiddenFlags.luckyCount++; cb(); } }
+        {text: function(m){ return "当然是秒了 (本题得分+"+Math.floor(60*m.pos)+"，心态+"+Math.floor(10*m.pos)+")"; }, action: function(cb,m){ addScore(Math.floor(60*m.pos)); updStat('心态', Math.floor(10*m.pos)); G.flags.hiddenFlags.luckyCount++; cb(); } }
     ], negative:false },
     {text:"🌑停电了！", choices:[
-        {text: function(m){ return "等待恢复 (跳过1回合，来电后心态" + (-Math.floor(15*m.neg)) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(15*m.neg)); skipToNextRound(); } }
+        {text: function(m){ return "等待恢复 (跳过1回合，来电后心态"+(-Math.floor(15*m.neg))+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(15*m.neg)); skipToNextRound(); } }
     ], negative:true },
     {text:"👑旁边坐着去年的省队选手。", choices:[
-        {text: function(m){ return "压力山大 (心态" + (-Math.floor(10*m.neg)) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(10*m.neg)); cb(); } },
-        {text: function(m){ return "动力来了 (代码力+" + Math.floor(5*m.pos) + ")"; }, action: function(cb,m){ updStat('代码力', Math.floor(5*m.pos)); cb(); } }
+        {text: function(m){ return "压力山大 (心态"+(-Math.floor(10*m.neg))+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(10*m.neg)); cb(); } },
+        {text: function(m){ return "动力来了 (代码力+"+Math.floor(5*m.pos)+")"; }, action: function(cb,m){ updStat('代码力', Math.floor(5*m.pos)); cb(); } }
     ], negative:false },
     {text:'📢评测系统公告："关于第三题数据范围的补充说明"', choices:[
-        {text: function(m){ return "仔细阅读 (知识+" + Math.floor(5*m.pos) + "，跳过当前回合)"; }, action: function(cb,m){ updStat('知识', Math.floor(5*m.pos)); cb(); } },
+        {text: function(m){ return "仔细阅读 (知识+"+Math.floor(5*m.pos)+"，跳过当前回合)"; }, action: function(cb,m){ updStat('知识', Math.floor(5*m.pos)); cb(); } },
         {text: function(m){ return "忽略"; }, action: function(cb,m){ cb(); } }
     ], negative:false },
     {text:"⏰时间看错。", choices:[
-        {text: function(m){ return "虚惊一场 (心态+" + Math.floor(8*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', Math.floor(8*m.pos)); cb(); } },
-        {text: function(m){ return "还是紧张 (心态" + (-Math.floor(2*m.neg)) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(2*m.neg)); cb(); } }
+        {text: function(m){ return "虚惊一场 (心态+"+Math.floor(8*m.pos)+")"; }, action: function(cb,m){ updStat('心态', Math.floor(8*m.pos)); cb(); } },
+        {text: function(m){ return "还是紧张 (心态"+(-Math.floor(2*m.neg))+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(2*m.neg)); cb(); } }
     ], negative:false },
     {text:"📩队友扔来纸团。", choices:[
         {text: function(m){ return "打开看"; }, action: function(cb,m){ var social=G.player.社交; var goodProb = social>70 ? 1.0 : social>50 ? 0.8 : social<30 ? 0.3 : 0.5; if(Math.random()<goodProb){ updStat('心态', Math.floor(15*m.pos)); addLog('是加油纸条，心态+'+Math.floor(15*m.pos)); } else { updStat('心态', -Math.floor(20*m.neg)); addLog('被老师发现了！心态-'+Math.floor(20*m.neg)); } cb(); } },
-        {text: function(m){ return "还回去 (心态" + (-Math.floor(5*m.neg)) + "，社交+" + Math.floor(5*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('社交', Math.floor(5*m.pos)); cb(); } }
+        {text: function(m){ return "还回去 (心态"+(-Math.floor(5*m.neg))+"，社交+"+Math.floor(5*m.pos)+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); updStat('社交', Math.floor(5*m.pos)); cb(); } }
     ], negative:false },
     {text:"🧠心理崩溃边缘。", choices:[
-        {text: function(m){ return "深呼吸 (心态+" + Math.floor(10*m.pos) + "，跳过当前回合)"; }, action: function(cb,m){ updStat('心态', Math.floor(10*m.pos)); cb(); } },
-        {text: function(m){ return "硬写 (代码力" + (-Math.floor(15*m.neg)) + ")"; }, action: function(cb,m){ updStat('代码力', -Math.floor(15*m.neg)); cb(); } }
+        {text: function(m){ return "深呼吸 (心态+"+Math.floor(10*m.pos)+"，跳过当前回合)"; }, action: function(cb,m){ updStat('心态', Math.floor(10*m.pos)); cb(); } },
+        {text: function(m){ return "硬写 (代码力"+(-Math.floor(15*m.neg))+")"; }, action: function(cb,m){ updStat('代码力', -Math.floor(15*m.neg)); cb(); } }
     ], negative:true },
     {text:"💡灵感爆发。", choices:[
-        {text: function(m){ return "立刻修改 (代码力" + (-Math.floor(8*m.neg)) + "，本题得分+20%)"; }, action: function(cb,m){ updStat('代码力', -Math.floor(8*m.neg)); cb(); } }
+        {text: function(m){ return "立刻修改 (代码力"+(-Math.floor(8*m.neg))+"，本题得分+20%)"; }, action: function(cb,m){ updStat('代码力', -Math.floor(8*m.neg)); cb(); } }
     ], negative:false },
     {text:"🚪队友提前交卷。", choices:[
-        {text: function(m){ var extra = (G.flags.identity && G.flags.identity.id === '天赋怪') ? Math.floor(10*m.neg) : 0; return "感到压力 (心态" + (-Math.floor(10*m.neg) - extra) + (extra ? " (天赋怪额外-10)" : "") + ")"; }, action: function(cb,m){ var p = -Math.floor(10*m.neg); if (G.flags.identity && G.flags.identity.id === '天赋怪') p -= Math.floor(10*m.neg); updStat('心态', p); cb(); } },
+        {text: function(m){ var extra = (G.flags.identity && G.flags.identity.id === '天赋怪') ? Math.floor(10*m.neg) : 0; return "感到压力 (心态"+(-Math.floor(10*m.neg) - extra)+(extra ? " (天赋怪额外-10)" : "")+")"; }, action: function(cb,m){ var p = -Math.floor(10*m.neg); if (G.flags.identity && G.flags.identity.id === '天赋怪') p -= Math.floor(10*m.neg); updStat('心态', p); cb(); } },
         {text: function(m){ return "不受影响"; }, action: function(cb,m){ cb(); } }
     ], negative:true }
 ];
 var ID_EV = {
     '退役边缘人':{text:"👻你恍惚看到去年的自己坐在旁边。", choices:[
-        {text: function(m){ return "挥手赶走幻觉 (心态" + (-Math.floor(5*m.neg)) + ")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); cb(); } },
-        {text: function(m){ return "对视一眼 (心态+" + Math.floor(10*m.pos) + ")"; }, action: function(cb,m){ updStat('心态', Math.floor(10*m.pos)); cb(); } }
+        {text: function(m){ return "挥手赶走幻觉 (心态"+(-Math.floor(5*m.neg))+")"; }, action: function(cb,m){ updStat('心态', -Math.floor(5*m.neg)); cb(); } },
+        {text: function(m){ return "对视一眼 (心态+"+Math.floor(10*m.pos)+")"; }, action: function(cb,m){ updStat('心态', Math.floor(10*m.pos)); cb(); } }
     ]},
     '天赋怪':{text:"😟自我怀疑涌上心头。", choices:[
-        {text: function(m){ return "重新推一遍 (知识+" + Math.floor(5*m.pos) + "，跳过本回合)"; }, action: function(cb,m){ updStat('知识', Math.floor(5*m.pos)); cb(); } },
+        {text: function(m){ return "重新推一遍 (知识+"+Math.floor(5*m.pos)+"，跳过本回合)"; }, action: function(cb,m){ updStat('知识', Math.floor(5*m.pos)); cb(); } },
         {text: function(m){ return "相信直觉"; }, action: function(cb,m){ cb(); } }
     ]},
     '刷题机器':{text:"🧐这题似曾相识。", choices:[
@@ -487,8 +463,8 @@ var ID_EV = {
         {text: function(m){ return "重新思考"; }, action: function(cb,m){ cb(); } }
     ]},
     '女队独苗':{text:'👥听到旁边男生议论："女生也来比赛？"', choices:[
-        {text: function(m){ return "怼回去 (心态+" + Math.floor(20*m.pos) + "，跳过本回合)"; }, action: function(cb,m){ updStat('心态', Math.floor(20*m.pos)); cb(); } },
-        {text: function(m){ return "用分数说话 (下题得分+15%，心态" + (-Math.floor(5*m.neg)) + ")"; }, action: function(cb,m){ G.flags.nextProbBonus = true; updStat('心态', -Math.floor(5*m.neg)); cb(); } }
+        {text: function(m){ return "怼回去 (心态+"+Math.floor(20*m.pos)+"，跳过本回合)"; }, action: function(cb,m){ updStat('心态', Math.floor(20*m.pos)); cb(); } },
+        {text: function(m){ return "用分数说话 (下题得分+15%，心态"+(-Math.floor(5*m.neg))+")"; }, action: function(cb,m){ G.flags.nextProbBonus = true; updStat('心态', -Math.floor(5*m.neg)); cb(); } }
     ]}
 };
 
@@ -504,274 +480,394 @@ function getActionEnv(action) {
 
 // ===== 主菜单与教程 =====
 function mainMenu() { G.flags.stage='main'; showScene('🌟 OI生涯模拟器\n\n从高一到高三，经历完整的OI之路。', [{text:'🎮 开始游戏', action:function(){ selectDifficulty(); } }, {text:'📖玩法说明', action:function(){ showTutorial(0); } }, {text:'🏛️档案馆', action:function(){ showArchive(); } }, {text:'📜更新日志', action:function(){ showScene('🎉 2026.7.13\nV1.0.0 游戏上架', [{text:'返回', action:mainMenu}]); } }]); }
-function showTutorial(idx) { var tabs = ['欢迎','身份系统','核心属性','训练与成长','道具系统','比赛流程','卡牌详解','事件系统','晋级与结局','操作指南']; var html = '<div class="tab-container">' + tabs.map(function(t,i){ return '<span class="tab ' + (i===idx?'active':'') + '" data-idx="' + i + '">' + t + '</span>'; }).join('') + '</div><div class="notebook">' + tutorialTexts[idx] + '</div>'; showScene(html, [{text:'返回主菜单', action:mainMenu}]); document.querySelectorAll('.tab').forEach(function(tab){ tab.onclick = function(){ showTutorial(parseInt(this.dataset.idx)); }; }); }
-function showArchive() { var achList = '🏆 成就：\n' + (G.achievements.length ? G.achievements.join('\n') : '暂无') + '\n\n🔒 未解锁隐藏成就：\n'; var hc = {'至暗时刻':'心态降至5点以下','欧皇降临':'撞原题3次以上','燃烧殆尽':'触发最后一舞并获得奖项','冷酷机器':'刷题机器角色且读错题不超过2次','良师益友':'社交>80','独行侠':'社交<40且获得奖项'}; for (var k in hc) { if (G.hiddenAch.indexOf(k) === -1) achList += k + '：' + hc[k] + '\n'; } showScene('🏛️ OI档案馆\n\n🏅 获得奖项：\n' + (G.awards.length ? G.awards.join('\n') : '暂无') + '\n\n' + achList + '\n📖 训练日记：\n' + (G.flags.diary.length ? G.flags.diary.join('\n') : '暂无'), [{text:'返回', action:mainMenu}]); }
+function showTutorial(idx) { var tabs = ['欢迎','身份系统','核心属性','训练与成长','道具系统','比赛流程','卡牌详解','事件系统','晋级与结局','操作指南']; var html = '<div class="tab-container">'+tabs.map(function(t,i){ return '<span class="tab '+(i===idx?'active':'')+'" data-idx="'+i+'">'+t+'</span>'; }).join('')+'</div><div class="notebook">'+tutorialTexts[idx]+'</div>'; showScene(html, [{text:'返回主菜单', action:mainMenu}]); document.querySelectorAll('.tab').forEach(function(tab){ tab.onclick = function(){ showTutorial(parseInt(this.dataset.idx)); }; }); }
+function showArchive() { var achList = '🏆 成就：\n'+(G.achievements.length?G.achievements.join('\n'):'暂无')+'\n\n🔒 未解锁隐藏成就：\n'; var hc={'至暗时刻':'心态降至5点以下','欧皇降临':'撞原题3次以上','燃烧殆尽':'触发最后一舞并获得奖项','冷酷机器':'刷题机器角色且读错题不超过2次','良师益友':'社交>80','独行侠':'社交<40且获得奖项'}; for(var k in hc){ if(G.hiddenAch.indexOf(k)===-1) achList += k+'：'+hc[k]+'\n'; } showScene('🏛️ OI档案馆\n\n🏅 获得奖项：\n'+(G.awards.length?G.awards.join('\n'):'暂无')+'\n\n'+achList+'\n📖 训练日记：\n'+(G.flags.diary.length?G.flags.diary.join('\n'):'暂无'), [{text:'返回', action:mainMenu}]); }
 
-function selectDifficulty() { showScene('⚙️ 选择难度', [{text: ICON.diffEasy + ' 简单 - 适合初次体验', action:function(){ G.flags.difficulty='easy'; selectIdentity(); } }, {text: ICON.diffNormal + ' 普通 - 标准挑战', action:function(){ G.flags.difficulty='normal'; selectIdentity(); } }, {text: ICON.diffHard + ' 困难 - 需要经验与策略', action:function(){ G.flags.difficulty='hard'; selectIdentity(); } }, {text: ICON.diffHell + ' 地狱 - 极限受苦，为真正的OIer准备', action:function(){ G.flags.difficulty='hell'; selectIdentity(); } }]); }
-function selectIdentity() { showScene('🎭选择你的身份', IDS.map(function(id,i){ return {text: (i+1) + '. ' + id.name + '·' + id.title, action: function(){ confirmIdentity(i); } }; })); }
-function confirmIdentity(i) { var id = IDS[i]; G.flags.identity = id; G.player = { 代码力:id.ic, 心态:id.im, 知识:id.ik, 社交:id.is }; showScene('📜' + id.name + '·' + id.title + '\n\n' + id.desc + '\n\n✨能力：' + id.abi + '\n⚠️弱点：' + id.weak, [{text:'✅确定', action:function(){ startNewGame(); } }, {text:'↩️重选', action:selectIdentity}]); }
+function selectDifficulty() { showScene('⚙️ 选择难度', [{text: ICON.diffEasy+' 简单 - 适合初次体验', action:function(){ G.flags.difficulty='easy'; selectIdentity(); } }, {text: ICON.diffNormal+' 普通 - 标准挑战', action:function(){ G.flags.difficulty='normal'; selectIdentity(); } }, {text: ICON.diffHard+' 困难 - 需要经验与策略', action:function(){ G.flags.difficulty='hard'; selectIdentity(); } }, {text: ICON.diffHell+' 地狱 - 极限受苦，为真正的OIer准备', action:function(){ G.flags.difficulty='hell'; selectIdentity(); } }]); }
+function selectIdentity() { showScene('🎭选择你的身份', IDS.map(function(id,i){ return {text: (i+1)+'. '+id.name+'·'+id.title, action: function(){ confirmIdentity(i); } }; })); }
+function confirmIdentity(i) { var id = IDS[i]; G.flags.identity = id; G.player = { 代码力:id.ic, 心态:id.im, 知识:id.ik, 社交:id.is }; showScene('📜'+id.name+'·'+id.title+'\n\n'+id.desc+'\n\n✨能力：'+id.abi+'\n⚠️弱点：'+id.weak, [{text:'✅确定', action:function(){ startNewGame(); } }, {text:'↩️重选', action:selectIdentity}]); }
+
 function startNewGame() {
-    G.achievements = []; G.hiddenAch = []; G.awards = []; G.flags.diary = [];
+    G.achievements=[]; G.hiddenAch=[]; G.awards=[]; G.flags.diary=[];
     G.flags.fortune = ['lucky','disaster','small','big'][Math.floor(Math.random()*4)];
     G.flags.rivals = [{name:'省队预定哥',score:0},{name:'同班兄弟',score:0},{name:'神秘大佬',score:0}];
     G.flags.items = []; if (G.flags.difficulty === 'hell') { G.flags.items.push('免死金牌'); addLog('🔥 地狱难度初始赠送免死金牌'); }
     G.flags.hiddenFlags = {darkestMood:100, luckyCount:0, grinderClean:0, 社交低:false, 社交高:false};
     var savedIdentity = G.flags.identity;
-    G.flags = { year:1, term:'上学期', stage:'prep', scores:{csp:0,noip:0,pd1:0,pd2:0,noi:0,ctt:0,cts:0,ioi:0, cttD1:0, cttD2:0, cttD3:0}, eventsLog:[], gameOver:false, trainingCount:0, trainingMax:5, curContest:'', round:0, cScore:0, cMaxP:0, cProbScore:0, identity:savedIdentity, lastDanceTurns:0, lastDanceTriggered:false, moodRecoverUsed:false, nextProbBonus:false, curProbBonus:false, nextCb:null, fortune:G.flags.fortune, rivals:G.flags.rivals, items:G.flags.items, difficulty:G.flags.difficulty, diary:G.flags.diary, hiddenFlags:G.flags.hiddenFlags, skipNextRound:false, rerollCount:0, noiBonus:0, bestScore:0, lowestMood:100, strategy:null, lastAction:null, contestPlayed:{csp:false,noip:false,pd1:false,pd2:false,noi:false,ctt:false,cts:false,ioi:false}, contestTier:1, lastWasEvent:false, wcQuality:0, wcTrainCount:0, eliteMode:false, sprintBQualified:false, wcHistory:[] };
+    G.flags = { year:1, term:'上学期', stage:'prep', scores:{csp:0,noip:0,pd1:0,pd2:0,noi:0,ctt:0,cts:0,ioi:0, cttD1:0, cttD2:0, cttD3:0}, eventsLog:[], gameOver:false, trainingCount:0, trainingMax:5, curContest:'', round:0, cScore:0, cMaxP:0, cProbScore:0, identity:savedIdentity, lastDanceTurns:0, lastDanceTriggered:false, moodRecoverUsed:false, nextProbBonus:false, curProbBonus:false, nextCb:null, fortune:G.flags.fortune, rivals:G.flags.rivals, items:G.flags.items, difficulty:G.flags.difficulty, diary:G.flags.diary, hiddenFlags:G.flags.hiddenFlags, skipNextRound:false, rerollCount:0, noiBonus:0, bestScore:0, lowestMood:100, strategy:null, lastAction:null, contestPlayed:{csp:false,noip:false,pd1:false,pd2:false,noi:false,ctt:false,cts:false,ioi:false}, contestTier:1, lastWasEvent:false, wcQuality:0, wcTrainCount:0, eliteMode:false, sprintBQualified:false, wcHistory:[], provQualified:false, cspPassed:false, cttFailed:false };
     adjustCutoffs(); addLog('高一新生，OI之旅开始！'); prologuePrep();
 }
 
-function adjustCutoffs() { var r=function(){ return Math.floor(Math.random()*16)-8; }; var diffMul = getDiff().lineMul; var baseCttP = 450, baseCtsP = 350; var base = {cspP:250, noipG:200, pTeamA:312, noiG:350, cttP:baseCttP, ctsP:baseCtsP, ioiG:380}; if (G.flags.difficulty === 'hard') { base.cspP=300; base.noipG=240; base.pTeamA=335; base.noiG=380; base.cttP=520; base.ctsP=400; } if (G.flags.difficulty === 'hell') { base.cspP=325; base.noipG=260; base.pTeamA=385; base.noiG=420; base.cttP=610; base.ctsP=470; } var f = G.flags.fortune; if (f === 'small') for (var k in base) base[k] = Math.floor(base[k]*0.9); else if (f === 'big') for (var k in base) base[k] = Math.floor(base[k]*1.1); G.cutoffs = { cspP: clamp(Math.floor(base.cspP*diffMul)+r(), 200, 320), noipG: clamp(Math.floor(base.noipG*diffMul)+r(), 160, 260), pTeamA: clamp(Math.floor(base.pTeamA*diffMul)+r(), 250, 400), noiG: clamp(Math.floor(base.noiG*diffMul)+r(), 300, 420), cttP: clamp(Math.floor(base.cttP*diffMul)+r(), 400, 650), ctsP: clamp(Math.floor(base.ctsP*diffMul)+r(), 300, 500), ioiG: clamp(Math.floor(base.ioiG*diffMul)+r(), 320, 450) }; }
-function getCSPAward(s) { var c = G.cutoffs; if (s >= c.cspP) return '🥇CSP-S一等奖'; if (s >= c.cspP*0.75) return '🥈CSP-S二等奖'; if (s >= c.cspP*0.4) return '🥉CSP-S三等奖'; return '未获奖'; }
-function getNOIPAward(s) { var c = G.cutoffs; if (s >= c.noipG) return '🥇NOIP一等奖'; if (s >= c.noipG*0.75) return '🥈NOIP二等奖'; if (s >= c.noipG*0.4) return '🥉NOIP三等奖'; return '未获奖'; }
-function getProvAward(t) { var c = G.cutoffs; if (t >= c.pTeamA) return '🌟 入选省队A类 (NOI+5分)'; if (t >= c.pTeamA*0.85) return '🌟 入选省队B类'; if (t >= c.pTeamA*0.7) return '🌟 入选省队C类'; return '❌ 未入选省队'; }
-function getNOIAward(t) { var c = G.cutoffs; if (t >= c.noiG) return '🥇NOI金牌'; if (t >= c.noiG*0.8) return '🥈NOI银牌'; if (t >= c.noiG*0.5) return '🥉NOI铜牌'; return '未获奖'; }
-function getCTTAward(s) { return s >= G.cutoffs.cttP ? '✅CTT选拔通过' : '❌CTT选拔未通过'; }
-function getCTSAward(t) { return t >= G.cutoffs.ctsP ? '🇨🇳入选国家队' : '未入选国家队'; }
-function getIOIAward(t) { var c = G.cutoffs; if (t >= c.ioiG) return '🥇IOI金牌'; if (t >= c.ioiG*0.8) return '🥈IOI银牌'; if (t >= c.ioiG*0.5) return '🥉IOI铜牌'; return '未获奖'; }
-function unlockAch(n) { if (G.achievements.indexOf(n) === -1) { G.achievements.push(n); addLog('🏆 成就解锁：' + n); showFloatText('🏆 ' + n, '#f1c40f'); } }
-function unlockHidden(n) { if (G.hiddenAch.indexOf(n) === -1) { G.hiddenAch.push(n); addLog('✨ 隐藏成就：' + n); showFloatText('✨ ' + n, '#e84393'); } }
-function addAward(awardText) { if (awardText && awardText.indexOf('未获奖') === -1 && awardText.indexOf('未入选') === -1 && awardText.indexOf('未通过') === -1 && awardText.indexOf('未获') === -1) G.awards.push(awardText); }
+function adjustCutoffs() { var r=function(){ return Math.floor(Math.random()*16)-8; }; var diffMul=getDiff().lineMul; var base={cspP:250, noipG:200, pTeamA:312, noiG:350, cttP:450, ctsP:350, ioiG:380}; if(G.flags.difficulty==='hard'){ base.cspP=300; base.noipG=240; base.pTeamA=335; base.noiG=380; base.cttP=520; base.ctsP=400; } if(G.flags.difficulty==='hell'){ base.cspP=325; base.noipG=260; base.pTeamA=385; base.noiG=420; base.cttP=610; base.ctsP=470; } var f=G.flags.fortune; if(f==='small') for(var k in base) base[k]=Math.floor(base[k]*0.9); else if(f==='big') for(var k in base) base[k]=Math.floor(base[k]*1.1); G.cutoffs = { cspP:clamp(Math.floor(base.cspP*diffMul)+r(),200,320), noipG:clamp(Math.floor(base.noipG*diffMul)+r(),160,260), pTeamA:clamp(Math.floor(base.pTeamA*diffMul)+r(),250,400), noiG:clamp(Math.floor(base.noiG*diffMul)+r(),300,420), cttP:clamp(Math.floor(base.cttP*diffMul)+r(),400,650), ctsP:clamp(Math.floor(base.ctsP*diffMul)+r(),300,500), ioiG:clamp(Math.floor(base.ioiG*diffMul)+r(),320,450) }; }
+function getCSPAward(s) { var c=G.cutoffs; if(s>=c.cspP) return '🥇CSP-S一等奖'; if(s>=c.cspP*0.75) return '🥈CSP-S二等奖'; if(s>=c.cspP*0.4) return '🥉CSP-S三等奖'; return '未获奖'; }
+function getNOIPAward(s) { var c=G.cutoffs; if(s>=c.noipG) return '🥇NOIP一等奖'; if(s>=c.noipG*0.75) return '🥈NOIP二等奖'; if(s>=c.noipG*0.4) return '🥉NOIP三等奖'; return '未获奖'; }
+function getProvAward(t) { var c=G.cutoffs; if(t>=c.pTeamA) return '🌟 入选省队A类 (NOI+5分)'; if(t>=c.pTeamA*0.85) return '🌟 入选省队B类'; if(t>=c.pTeamA*0.7) return '🌟 入选省队C类'; return '❌ 未入选省队'; }
+function getNOIAward(t) { var c=G.cutoffs; if(t>=c.noiG) return '🥇NOI金牌'; if(t>=c.noiG*0.8) return '🥈NOI银牌'; if(t>=c.noiG*0.5) return '🥉NOI铜牌'; return '未获奖'; }
+function getCTTAward(s) { return s>=G.cutoffs.cttP ? '✅CTT选拔通过' : '❌CTT选拔未通过'; }
+function getCTSAward(t) { return t>=G.cutoffs.ctsP ? '🇨🇳入选国家队' : '未入选国家队'; }
+function getIOIAward(t) { var c=G.cutoffs; if(t>=c.ioiG) return '🥇IOI金牌'; if(t>=c.ioiG*0.8) return '🥈IOI银牌'; if(t>=c.ioiG*0.5) return '🥉IOI铜牌'; return '未获奖'; }
+function unlockAch(n) { if(G.achievements.indexOf(n)===-1){ G.achievements.push(n); addLog('🏆 成就解锁：'+n); showFloatText('🏆 '+n,'#f1c40f'); } }
+function unlockHidden(n) { if(G.hiddenAch.indexOf(n)===-1){ G.hiddenAch.push(n); addLog('✨ 隐藏成就：'+n); showFloatText('✨ '+n,'#e84393'); } }
+function addAward(awardText) { if(awardText && awardText.indexOf('未获奖')===-1 && awardText.indexOf('未入选')===-1 && awardText.indexOf('未通过')===-1 && awardText.indexOf('未获')===-1) G.awards.push(awardText); }
 
 // ===== 训练 =====
 function prologuePrep() { G.flags.stage='prep'; G.flags.term='上学期'; showScene('📅高一·上学期·赛前准备 (5次训练)', [{text:'开始训练', action:function(){ freeTraining(5, cspContest); } }]); }
-function freeTraining(cnt,next) { G.flags.stage='training'; G.flags.trainingCount=0; G.flags.trainingMax=cnt; G.flags.nextCb=next; trainingStep(); }
-function nextTraining() { if (G.flags.trainingCount >= G.flags.trainingMax) { var cb = G.flags.nextCb; if (cb) cb(); } else trainingStep(); }
-function trainingStep() {
-    if (G.flags.trainingCount >= G.flags.trainingMax) { var cb = G.flags.nextCb; if (cb) cb(); return; }
-    G.flags.trainingCount++; playTone(440, 0.07, 'triangle');
-    var itemProb = 0.2 + G.player.社交 * 0.002 + getDiff().itemBonus; itemProb = Math.max(0, itemProb);
-    if (Math.random() < itemProb && G.flags.items.length < 4) {
-        var pool = ['免死金牌','小抄','咖啡','幸运符']; var available = pool.filter(function(item){ return G.flags.items.indexOf(item) === -1; });
-        if (available.length > 0) { var got = available[Math.floor(Math.random() * available.length)]; G.flags.items.push(got); addLog('🎁获得道具：' + got); showFloatText('🎒 获得 ' + got, '#1abc9c'); }
+function freeTraining(cnt,next){ G.flags.stage='training'; G.flags.trainingCount=0; G.flags.trainingMax=cnt; G.flags.nextCb=next; trainingStep(); }
+function nextTraining(){ if(G.flags.trainingCount>=G.flags.trainingMax){ var cb=G.flags.nextCb; if(cb) cb(); } else trainingStep(); }
+function trainingStep(){
+    if(G.flags.trainingCount>=G.flags.trainingMax){ var cb=G.flags.nextCb; if(cb) cb(); return; }
+    G.flags.trainingCount++; playTone(440,0.07,'triangle');
+    var itemProb = 0.2 + G.player.社交*0.002 + getDiff().itemBonus; itemProb = Math.max(0,itemProb);
+    if(Math.random()<itemProb && G.flags.items.length<4){
+        var pool=['免死金牌','小抄','咖啡','幸运符']; var available=pool.filter(function(item){ return G.flags.items.indexOf(item)===-1; });
+        if(available.length>0){ var got=available[Math.floor(Math.random()*available.length)]; G.flags.items.push(got); addLog('🎁获得道具：'+got); showFloatText('🎒 获得 '+got,'#1abc9c'); }
     }
     showTrainingOptions();
 }
-function showTrainingOptions() {
-    var sK = predictTrainDelta(5), sC = predictTrainDelta(2), sM = predictTrainDelta(-1);
-    var dK = predictTrainDelta(8), dM = predictTrainDelta(-3);
-    var spM = predictTrainDelta(6), spC = predictTrainDelta(1);
-    var soS = predictTrainDelta(6), soK = predictTrainDelta(3 + (G.player.社交>50?2:0));
-    var slC = predictTrainDelta(7), slM = predictTrainDelta(3);
-    var retireText = (G.flags.identity && G.flags.identity.id === '退役边缘人') ? ICON.trainRetire + '看退役记 (心态+' + predictTrainDelta(8) + ')' : ICON.trainRetire + '看退役记 (心态' + predictTrainDelta(-3) + ', 知识+' + predictTrainDelta(3) + ', 代码力+' + predictTrainDelta(3) + ')';
+function showTrainingOptions(){
+    var sK=predictTrainDelta(5), sC=predictTrainDelta(2), sM=predictTrainDelta(-1);
+    var dK=predictTrainDelta(8), dM=predictTrainDelta(-3);
+    var spM=predictTrainDelta(6), spC=predictTrainDelta(1);
+    var soS=predictTrainDelta(6), soK=predictTrainDelta(3+(G.player.社交>50?2:0));
+    var slC=predictTrainDelta(7), slM=predictTrainDelta(3);
+    var retireText = (G.flags.identity && G.flags.identity.id==='退役边缘人') ? ICON.trainRetire+'看退役记 (心态+'+predictTrainDelta(8)+')' : ICON.trainRetire+'看退役记 (心态'+predictTrainDelta(-3)+', 知识+'+predictTrainDelta(3)+', 代码力+'+predictTrainDelta(3)+')';
     var opts = [
-        {text: ICON.trainStudy + '刷题巩固 (知识+' + sK + ' 代码力+' + sC + ' 心态' + sM + ')', action: function(){ updStat('知识',5); updStat('代码力',2); updStat('心态',-1); G.flags.diary.push('刷题巩固'); afterTrainAction(); } },
-        {text: ICON.trainDeep + '钻研算法 (知识+' + dK + ' 心态' + dM + ')', action: function(){ updStat('知识',8); updStat('心态',-3); G.flags.diary.push('钻研算法'); afterTrainAction(); } },
-        {text: ICON.trainSport + '运动放松 (心态+' + spM + ' 代码力+' + spC + ')', action: function(){ updStat('心态',6); updStat('代码力',1); G.flags.diary.push('运动放松'); afterTrainAction(); } },
-        {text: ICON.trainSocial + '与同学交流 (社交+' + soS + ' 知识+' + soK + ')', action: function(){ updStat('社交',6); updStat('知识',3+(G.player.社交>50?2:0)); G.flags.diary.push('与同学交流'); afterTrainAction(); } },
-        {text: ICON.trainSleep + '保证睡眠 (代码力+' + slC + ' 心态+' + slM + ')', action: function(){ updStat('代码力',7); updStat('心态',3); G.flags.diary.push('保证睡眠'); afterTrainAction(); } },
-        {text: retireText, action: function(){ if (G.flags.identity && G.flags.identity.id === '退役边缘人') { updStat('心态',8); G.flags.diary.push('看退役记'); } else { updStat('心态',-3); updStat('知识',3); updStat('代码力',3); G.flags.diary.push('看退役记'); } afterTrainAction(); } },
-        {text: ICON.trainDiary + '查看训练日记', action: function(){ showDiary(); } }
+        {text: ICON.trainStudy+'刷题巩固 (知识+'+sK+' 代码力+'+sC+' 心态'+sM+')', action:function(){ updStat('知识',5); updStat('代码力',2); updStat('心态',-1); G.flags.diary.push('刷题巩固'); afterTrainAction(); } },
+        {text: ICON.trainDeep+'钻研算法 (知识+'+dK+' 心态'+dM+')', action:function(){ updStat('知识',8); updStat('心态',-3); G.flags.diary.push('钻研算法'); afterTrainAction(); } },
+        {text: ICON.trainSport+'运动放松 (心态+'+spM+' 代码力+'+spC+')', action:function(){ updStat('心态',6); updStat('代码力',1); G.flags.diary.push('运动放松'); afterTrainAction(); } },
+        {text: ICON.trainSocial+'与同学交流 (社交+'+soS+' 知识+'+soK+')', action:function(){ updStat('社交',6); updStat('知识',3+(G.player.社交>50?2:0)); G.flags.diary.push('与同学交流'); afterTrainAction(); } },
+        {text: ICON.trainSleep+'保证睡眠 (代码力+'+slC+' 心态+'+slM+')', action:function(){ updStat('代码力',7); updStat('心态',3); G.flags.diary.push('保证睡眠'); afterTrainAction(); } },
+        {text: retireText, action:function(){ if(G.flags.identity && G.flags.identity.id==='退役边缘人'){ updStat('心态',8); G.flags.diary.push('看退役记'); } else { updStat('心态',-3); updStat('知识',3); updStat('代码力',3); G.flags.diary.push('看退役记'); } afterTrainAction(); } },
+        {text: ICON.trainDiary+'查看训练日记', action:function(){ showDiary(); } }
     ];
-    showScene('训练 (' + G.flags.trainingCount + '/' + G.flags.trainingMax + ')：', opts);
+    showScene('训练 ('+G.flags.trainingCount+'/'+G.flags.trainingMax+'):', opts);
 }
-function afterTrainAction() {
-    var rand = Math.random(); var m = getEventMult();
-    if (rand < getDiff().trainNegProb * 0.6) {
-        var types = ['study','deep','social','sleep','retire']; var type = types[Math.floor(Math.random() * types.length)]; var evs = TRAIN_EV[type];
-        if (evs) { var ev = evs[Math.floor(Math.random() * evs.length)]; G.flags.diary.push(ev.text);
-            if (ev.choices) { showScene('⚡额外随机事件\n' + ev.text, ev.choices.map(function(c){ return { text: c.text(m), action: function(){ c.action(function(){ nextTraining(); }, m); } }; })); }
-            else { ev.eff(m); showScene('⚡额外随机事件\n' + ev.text + '\n' + ev.txt(m), [{text:'继续', action:function(){ nextTraining(); } }]); } return; }
-    } else if (rand < 0.55) { var ev = RIVAL_EV[Math.floor(Math.random() * RIVAL_EV.length)]; showScene('⚡对手互动\n' + ev.text, ev.choices.map(function(c){ return { text: c.text(m), action: function(){ c.action(function(){ nextTraining(); }, m); } }; })); return; }
-    else if (G.flags.identity && CHAR_TRAIN_EV[G.flags.identity.id] && Math.random() < 0.25) { var ev = CHAR_TRAIN_EV[G.flags.identity.id][Math.floor(Math.random() * CHAR_TRAIN_EV[G.flags.identity.id].length)]; G.flags.diary.push(ev.text); showScene('⚡角色专属\n' + ev.text + '\n' + ev.txt(m), [{text:'继续', action:function(){ ev.eff(m); nextTraining(); } }]); return; }
+function afterTrainAction(){
+    var rand=Math.random(); var m=getEventMult();
+    if(rand < getDiff().trainNegProb*0.6){
+        var types=['study','deep','social','sleep','retire']; var type=types[Math.floor(Math.random()*types.length)]; var evs=TRAIN_EV[type];
+        if(evs){ var ev=evs[Math.floor(Math.random()*evs.length)]; G.flags.diary.push(ev.text);
+            if(ev.choices){ showScene('⚡额外随机事件\n'+ev.text, ev.choices.map(function(c){ return { text: c.text(m), action: function(){ c.action(function(){ nextTraining(); }, m); } }; })); }
+            else { ev.eff(m); showScene('⚡额外随机事件\n'+ev.text+'\n'+ev.txt(m), [{text:'继续', action:function(){ nextTraining(); } }]); } return; }
+    } else if(rand < 0.55){ var ev=RIVAL_EV[Math.floor(Math.random()*RIVAL_EV.length)]; showScene('⚡对手互动\n'+ev.text, ev.choices.map(function(c){ return { text: c.text(m), action: function(){ c.action(function(){ nextTraining(); }, m); } }; })); return; }
+    else if(G.flags.identity && CHAR_TRAIN_EV[G.flags.identity.id] && Math.random()<0.25){ var ev=CHAR_TRAIN_EV[G.flags.identity.id][Math.floor(Math.random()*CHAR_TRAIN_EV[G.flags.identity.id].length)]; G.flags.diary.push(ev.text); showScene('⚡角色专属\n'+ev.text+'\n'+ev.txt(m), [{text:'继续', action:function(){ ev.eff(m); nextTraining(); } }]); return; }
     nextTraining();
 }
-function showDiary() { var all = G.flags.diary.length ? G.flags.diary.join('\n') : '暂无训练日记。'; showScene('📖 训练日记\n\n' + all, [{text:'返回', action:showTrainingOptions}]); }
+function showDiary(){ var all=G.flags.diary.length?G.flags.diary.join('\n'):'暂无训练日记。'; showScene('📖 训练日记\n\n'+all, [{text:'返回', action:showTrainingOptions}]); }
 
-// ===== 比赛入口 =====
-function cspContest() { G.flags.contestPlayed.csp = true; startContest('CSP-S', 4, '', function(s){ checkCSPResult(s); }); }
-function noipContest() { G.flags.contestPlayed.noip = true; startContest('NOIP', 4, '省级联赛', function(s){ checkNOIPResult(s); }); }
-function provDay1() { G.flags.contestPlayed.pd1 = true; startContest('省选Day1', 3, '省队选拔', function(s){ G.flags.scores.pd1 = s; freeTraining(3, provDay2); }); }
-function provDay2() { G.flags.contestPlayed.pd2 = true; startContest('省选Day2', 3, '最后的机会', function(s){ G.flags.scores.pd2 = s; var weighted = Math.floor(G.flags.scores.noip * 0.35 + (G.flags.scores.pd1 + s) * 0.65); checkProvResult(weighted); }); }
-function noiDay1() { G.flags.contestPlayed.noi = true; startContest('NOI Day1', 3, '全国决赛', function(s){ G.flags.scores.noi = s; showScene('🌙NOI Day1 得分 ' + s, [{text:'进入Day2', action:function(){ noiDay2(); } }]); }); }
-function noiDay2() { startContest('NOI Day2', 3, '最后一战', function(s){ var total = G.flags.scores.noi + s + G.flags.noiBonus; checkNOIResult(total); }); }
-function cttDay1() { G.flags.contestPlayed.ctt = true; startContest('CTT Day1', 3, '国家集训队选拔', function(s){ G.flags.scores.cttD1 = s; freeTraining(1, cttDay2); }); }
-function cttDay2() { startContest('CTT Day2', 3, '国家集训队选拔', function(s){ G.flags.scores.cttD2 = s; freeTraining(1, cttDay3); }); }
-function cttDay3() { startContest('CTT Day3', 3, '最后一天', function(s){ G.flags.scores.cttD3 = s; var total = G.flags.scores.cttD1 + G.flags.scores.cttD2 + s; checkCTTResult(total); }); }
-
-// ===== 冬令营 (WC) 自主选择 + 联动 & 随机加成 =====
+// ===== 比赛入口（带学期/假期切换）=====
+function cspContest(){ G.flags.contestPlayed.csp=true; startContest('CSP-S',4,'', function(s){ checkCSPResult(s); }); }
+function noipContest(){ G.flags.contestPlayed.noip=true; startContest('NOIP',4,'省级联赛', function(s){ checkNOIPResult(s); }); }
+function provDay1(){
+    G.flags.term = (G.flags.year === 1) ? '下学期' : (G.flags.year === 2 ? '下学期' : '下学期');
+    G.flags.contestPlayed.pd1=true; startContest('省选Day1',3,'省队选拔', function(s){ G.flags.scores.pd1=s; freeTraining(3, provDay2); });
+}
+function provDay2(){ startContest('省选Day2',3,'最后的机会', function(s){ G.flags.scores.pd2=s; var weighted=Math.floor(G.flags.scores.noip*0.35 + (G.flags.scores.pd1+s)*0.65); checkProvResult(weighted); }); }
+function noiDay1(){
+    G.flags.term = '暑假';
+    G.flags.contestPlayed.noi=true; startContest('NOI Day1',3,'全国决赛', function(s){ G.flags.scores.noi=s; showScene('🌙NOI Day1 得分 '+s, [{text:'进入Day2', action:function(){ noiDay2(); } }]); });
+}
+function noiDay2(){ startContest('NOI Day2',3,'最后一战', function(s){ var total = G.flags.scores.noi + s + G.flags.noiBonus; checkNOIResult(total); }); }
+function cttDay1(){
+    G.flags.term = (G.flags.year === 2) ? '下学期' : '上学期';
+    G.flags.contestPlayed.ctt=true; startContest('CTT Day1',3,'国家集训队选拔', function(s){ G.flags.scores.cttD1=s; freeTraining(1, cttDay2); });
+}
+function cttDay2(){ startContest('CTT Day2',3,'国家集训队选拔', function(s){ G.flags.scores.cttD2=s; freeTraining(1, cttDay3); }); }
+function cttDay3(){ startContest('CTT Day3',3,'最后一天', function(s){ G.flags.scores.cttD3=s; var total = G.flags.scores.cttD1 + G.flags.scores.cttD2 + s; checkCTTResult(total); }); }
 function wcTraining(next) {
-    G.flags.stage = 'training';
-    G.flags.trainingCount = 0;
-    G.flags.wcTrainCount = 0;
-    G.flags.wcQuality = 0;
-    G.flags.trainingMax = 5;
-    G.flags.nextCb = next;
-    G.flags.wcHistory = [];   // 清空历史用于联动
-    G.flags._wcEventPool = TRAIN_EV.wc.slice();  // 拷贝事件池
+    G.flags.term = '寒假';
+    G.flags.stage='training';
+    G.flags.trainingCount=0;
+    G.flags.wcTrainCount=0;
+    G.flags.wcQuality=0;
+    G.flags.trainingMax=5;
+    G.flags.nextCb=next;
+    G.flags.wcHistory=[];
+    G.flags._wcEventPool = TRAIN_EV.wc.slice();
     showScene('⛄ 通过CTT！进入WC冬令营（5次训练）', [{text:'开始冬令营训练', action:function(){ wcTrainingStep(); } }]);
 }
-
 function wcTrainingStep() {
-    if (G.flags.wcTrainCount >= 5) {
-        var cb = G.flags.nextCb;
-        if (cb) cb();
-        return;
-    }
-    G.flags.wcTrainCount++;
-    playTone(440, 0.07, 'triangle');
-
-    var pool = G.flags._wcEventPool;
-    if (!pool || pool.length === 0) {
-        // 如果池空了（防错），补全
-        pool = TRAIN_EV.wc.slice();
-        G.flags._wcEventPool = pool;
-    }
-
-    // 随机抽取3个不同事件（如果不足3个则取全部）
-    var count = Math.min(3, pool.length);
-    var shuffled = pool.slice().sort(function(){ return Math.random() - 0.5; });
-    var options = shuffled.slice(0, count);
-
-    // 构建选择按钮
-    var choiceList = options.map(function(ev, idx) {
-        var plainText = ev.text.replace(/<[^>]+>/g, '');
-        var shortDesc = plainText.length > 25 ? plainText.substring(0, 25) + '...' : plainText;
-        var qualityText = ev.quality ? '⭐质量+' + ev.quality : '';
-        // 显示联动和随机加成提示（如果有）
-        var bonusHint = ev.bonus ? ' 🎲' : '';
-        var linkHint = ev.link ? ' 🔗' : '';
+    if(G.flags.wcTrainCount>=5){ var cb=G.flags.nextCb; if(cb) cb(); return; }
+    G.flags.wcTrainCount++; playTone(440,0.07,'triangle');
+    var pool=G.flags._wcEventPool;
+    if(!pool || pool.length===0){ pool=TRAIN_EV.wc.slice(); G.flags._wcEventPool=pool; }
+    var count=Math.min(3, pool.length);
+    var shuffled=pool.slice().sort(function(){ return Math.random()-0.5; });
+    var options=shuffled.slice(0,count);
+    var choiceList=options.map(function(ev,idx){
+        var plainText=ev.text.replace(/<[^>]+>/g,'');
+        var shortDesc=plainText.length>25?plainText.substring(0,25)+'...':plainText;
+        var qualityText=ev.quality?'⭐质量+'+ev.quality:'';
+        var bonusHint=ev.bonus?' 🎲':'';
+        var linkHint=ev.link?' 🔗':'';
         return {
-            text: (idx+1) + '. ' + shortDesc + (qualityText ? ' ' + qualityText : '') + bonusHint + linkHint,
-            action: function() {
-                // 从池中移除该事件
-                var index = G.flags._wcEventPool.indexOf(ev);
-                if (index !== -1) G.flags._wcEventPool.splice(index, 1);
-                // 执行事件
-                var m = getEventMult();
+            text: (idx+1)+'. '+shortDesc+(qualityText?' '+qualityText:'')+bonusHint+linkHint,
+            action: function(){
+                var index=G.flags._wcEventPool.indexOf(ev);
+                if(index!==-1) G.flags._wcEventPool.splice(index,1);
+                var m=getEventMult();
                 G.flags.diary.push(ev.text);
-                // 基础效果
                 ev.eff(m);
-                var extraText = '';
-                // 联动判定
-                if (ev.link) {
-                    var matched = ev.link.requires.some(function(keyword){
+                var extraText='';
+                if(ev.link){
+                    var matched=ev.link.requires.some(function(keyword){
                         return G.flags.wcHistory.some(function(hist){
-                            return hist.indexOf(keyword) !== -1;
+                            return hist.indexOf(keyword)!==-1;
                         });
                     });
-                    if (matched) {
-                        ev.link.eff(m);
-                        extraText += ' ' + ev.link.txt;
-                        addLog('🔗 联动触发！' + ev.link.txt);
-                    }
+                    if(matched){ ev.link.eff(m); extraText+=' '+ev.link.txt; addLog('🔗 联动触发！'+ev.link.txt); }
                 }
-                // 随机加成判定
-                if (ev.bonus && Math.random() < ev.bonus.chance) {
-                    ev.bonus.eff(m);
-                    extraText += ' ' + ev.bonus.txt;
-                    addLog('🎲 随机加成触发！' + ev.bonus.txt);
+                if(ev.bonus && Math.random()<ev.bonus.chance){
+                    ev.bonus.eff(m); extraText+=' '+ev.bonus.txt; addLog('🎲 随机加成触发！'+ev.bonus.txt);
                 }
-                // 记录本次选择（用于后续联动）
                 G.flags.wcHistory.push(ev.text);
-                // 质量分累加
-                if (ev.quality) G.flags.wcQuality += ev.quality;
-                // 显示结果
-                showScene('⛄ WC冬令营 (' + G.flags.wcTrainCount + '/5)\n' + ev.text + '\n' + ev.txt(m) + extraText + ' | 质量分：' + G.flags.wcQuality, [
+                if(ev.quality) G.flags.wcQuality+=ev.quality;
+                showScene('⛄ WC冬令营 ('+G.flags.wcTrainCount+'/5)\n'+ev.text+'\n'+ev.txt(m)+extraText+' | 质量分：'+G.flags.wcQuality, [
                     {text:'继续', action:function(){ wcTrainingStep(); } }
                 ]);
             }
         };
     });
-
-    // 如果选项不足3个（通常不会），补一些备用选项
-    while (choiceList.length < 3) {
+    while(choiceList.length<3){
         choiceList.push({
             text: '休息调整 (心态+5)',
-            action: function() {
-                updStat('心态', 5);
+            action: function(){
+                updStat('心态',5);
                 G.flags.diary.push('休息调整');
-                showScene('⛄ WC冬令营 (' + G.flags.wcTrainCount + '/5)\n你选择休息，心态+5 | 质量分：' + G.flags.wcQuality, [
+                showScene('⛄ WC冬令营 ('+G.flags.wcTrainCount+'/5)\n你选择休息，心态+5 | 质量分：'+G.flags.wcQuality, [
                     {text:'继续', action:function(){ wcTrainingStep(); } }
                 ]);
             }
         });
     }
-
-    showScene('⛄ 第' + G.flags.wcTrainCount + '次训练 - 选择一项活动：', choiceList);
+    showScene('⛄ 第'+G.flags.wcTrainCount+'次训练 - 选择一项活动：', choiceList);
 }
+function ctsDay1(){
+    G.flags.term = '下学期';
+    G.flags.contestPlayed.cts=true; startContest('CTS Day1',3,'国家队选拔', function(s){ G.flags.scores.cts=s; freeTraining(1, ctsDay2); });
+}
+function ctsDay2(){ startContest('CTS Day2',3,'最后一关', function(s){ var ctsTotal=G.flags.scores.cts+s; checkCTSResult(ctsTotal); }); }
+function ioiDay1(){
+    G.flags.term = '暑假';
+    G.flags.contestPlayed.ioi=true; startContest('IOI Day1',3,'世界舞台', function(s){ G.flags.scores.ioi=s; showScene('🌍IOI Day1 得分 '+s, [{text:'进入Day2', action:function(){ ioiDay2(); } }]); });
+}
+function ioiDay2(){ startContest('IOI Day2',3,'巅峰之战', function(s){ var t=G.flags.scores.ioi+s; var a=getIOIAward(t); addAward(a); if(t>=G.cutoffs.ioiG) unlockAch('IOI金牌'); endGame('IOI圆满落幕\n总分：'+t+'\n'+a); }); }
 
-// ===== 后续比赛 =====
-function ctsDay1() { G.flags.contestPlayed.cts = true; startContest('CTS Day1', 3, '国家队选拔', function(s){ G.flags.scores.cts = s; freeTraining(1, ctsDay2); }); }
-function ctsDay2() { startContest('CTS Day2', 3, '最后一关', function(s){ var ctsTotal = G.flags.scores.cts + s; checkCTSResult(ctsTotal); }); }
-function ioiDay1() { G.flags.contestPlayed.ioi = true; startContest('IOI Day1', 3, '世界舞台', function(s){ G.flags.scores.ioi = s; showScene('🌍IOI Day1 得分 ' + s, [{text:'进入Day2', action:function(){ ioiDay2(); } }]); }); }
-function ioiDay2() { startContest('IOI Day2', 3, '巅峰之战', function(s){ var t = G.flags.scores.ioi + s; var a = getIOIAward(t); addAward(a); if (t >= G.cutoffs.ioiG) unlockAch('IOI金牌'); endGame('IOI圆满落幕\n总分：' + t + '\n' + a); }); }
-function seniorCSPContest() { startContest('CSP-S', 4, '（纯参与）', function(s){ G.flags.scores.csp = s; showScene('CSP-S 得分：' + s, [{text:'继续', action:function(){ freeTraining(3, seniorNOIPContest); } }]); }); }
-function seniorNOIPContest() { startContest('NOIP', 4, '（纯参与）', function(s){ G.flags.scores.noip = s; showScene('NOIP 得分：' + s, [{text:'继续', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]); }); }
+// ===== 高三冲刺B入口 =====
+function seniorCSPContest(){ G.flags.term='上学期'; startContest('CSP-S',4,'（纯参与）', function(s){ G.flags.scores.csp=s; checkSeniorCSPResult(s); }); }
+function seniorNOIPContest(){ startContest('NOIP',4,'（纯参与）', function(s){ G.flags.scores.noip=s; showScene('NOIP得分：'+s+'（纯参与，不影响后续）', [{text:'继续', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]); }); }
+function checkSeniorCSPResult(score) {
+    if(score <= 0) {
+        showScene('CSP-S爆零，失去NOIP参赛资格，但训练继续。', [{text:'继续训练', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]);
+    } else {
+        showScene('CSP-S 得分：'+score+'（纯参与）', [{text:'继续', action:function(){ freeTraining(3, seniorNOIPContest); } }]);
+    }
+}
 
 // ===== 比赛结果判定 =====
 function checkCSPResult(score) {
-    G.flags.scores.csp = score; var award = getCSPAward(score); addAward(award);
-    if (score <= 0) {
-        if (G.flags.year === 1) { showScene('💔CSP-S爆零', [{text:'明年再战', action:function(){ advanceYear(); } }, {text:'退役', action:function(){ endGame('退役'); } }]); }
-        else if (G.flags.eliteMode) { showScene('CSP-S 得分为 0，但作为集训队成员，你将继续前进。', [{text:'继续', action:function(){ G.flags.stage = 'prep'; freeTraining(3, noipContest); } }]); }
-        else { endGame('CSP-S爆零，竞赛生涯结束'); }
+    G.flags.scores.csp = score;
+    var award = getCSPAward(score);
+    addAward(award);
+    if(score <= 0) {
+        if(G.flags.year === 1) {
+            showScene('💔CSP-S爆零', [{text:'明年再战', action:function(){ advanceYear(); }}, {text:'退役', action:function(){ endGame('退役'); } }]);
+        } else if(G.flags.year === 2 && G.flags.eliteMode) {
+            showScene('CSP-S爆零，失去NOIP和省选资格，但精英路线直接进入CTT选拔。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, cttDay1); } }]);
+        } else if(G.flags.year === 3) {
+            showScene('CSP-S爆零，失去NOIP参赛资格，但训练继续。', [{text:'继续训练', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]);
+        } else {
+            endGame('CSP-S爆零，竞赛生涯结束');
+        }
     } else {
-        if (G.flags.year === 3) { showScene('CSP-S 得分：' + score + '（纯参与）', [{text:'继续', action:function(){ G.flags.stage = 'prep'; freeTraining(3, seniorNOIPContest); } }]); }
-        else { showScene('🎉CSP-S：' + score + '分\n' + award, [{text:'进入NOIP训练', action:function(){ G.flags.stage = 'prep'; freeTraining(3, noipContest); } }]); }
+        G.flags.cspPassed = true;
+        if(G.flags.year === 3) {
+            showScene('CSP-S 得分：'+score+'（纯参与）', [{text:'继续', action:function(){ freeTraining(3, seniorNOIPContest); } }]);
+        } else {
+            showScene('🎉CSP-S：'+score+'分\n'+award, [{text:'进入NOIP训练', action:function(){ G.flags.stage='prep'; freeTraining(3, noipContest); } }]);
+        }
     }
 }
+
 function checkNOIPResult(score) {
-    G.flags.scores.noip = score; var award = getNOIPAward(score); addAward(award);
-    if (score < G.cutoffs.noipG * 0.75) {
-        if (G.flags.eliteMode) { showScene('NOIP 未达线，但集训队身份让你继续前进。', [{text:'继续', action:function(){ G.flags.stage = 'prep'; freeTraining(3, provDay1); } }]); }
-        else if (G.flags.year === 2) { endGame('高二NOIP未晋级'); }
-        else { showScene('📉NOIP未晋级', [{text:'明年再战', action:function(){ advanceYear(); } }, {text:'退役', action:function(){ endGame('退役'); } }]); }
-    } else {
-        showScene('🏅NOIP：' + score + '分\n' + award, [{text:'进入省选训练', action:function(){ G.flags.stage = 'prep'; freeTraining(3, provDay1); } }]);
-    }
-}
-function checkProvResult(weighted) { var award = getProvAward(weighted); addAward(award); if (award.indexOf('A类') !== -1) G.flags.noiBonus = 5; if (award.indexOf('未入选') === -1) { showScene('🌟省选加权总分 ' + weighted + '\n' + award, [{text:'备战NOI', action:function(){ G.flags.stage = 'prep'; freeTraining(3, noiDay1); } }]); } else { if (G.flags.eliteMode) { showScene('省选未入选，但集训队身份让你继续参加NOI。', [{text:'继续', action:function(){ G.flags.stage = 'prep'; freeTraining(3, noiDay1); } }]); } else if (G.flags.year === 2) { endGame('高二省选未入选'); } else { showScene('💧省选未入选', [{text:'明年再战', action:function(){ advanceYear(); } }, {text:'退役', action:function(){ endGame('退役'); } }]); } } }
-function checkNOIResult(total) {
-    G.flags.scores.noi = total; G.flags.scores.noiHistory.push({year:G.flags.year, score:total}); var award = getNOIAward(total); addAward(award);
-    if (total >= G.cutoffs.noiG) {
-        unlockAch('NOI金牌');
-        if (G.flags.year === 1) {
-            G.flags.eliteMode = true; G.flags.sprintBQualified = true;
-            showScene('🥇NOI总分 ' + total + '\n' + award + '\n\n你以高一身份获得金牌，入选国家集训队！\n高二将进入精英路线。', [{text:'继续', action:function(){
-                G.flags.year = 2; G.flags.term = '上学期'; G.flags.stage = 'prep'; updateDisplay();
-                freeTraining(5, cspContest);
-            } }]);
-        } else if (G.flags.year === 2) {
-            G.flags.sprintBQualified = true;
-            if (G.flags.eliteMode) {
-                showScene('🥇NOI总分 ' + total + '\n' + award + '\n你再次获得金牌，已获得高三冲刺B资格。', [{text:'继续', action:function(){
-                    G.flags.stage = 'prep'; updateDisplay();
-                    freeTraining(3, cttDay1);
-                } }]);
+    G.flags.scores.noip = score;
+    var award = getNOIPAward(score);
+    addAward(award);
+    if(score < G.cutoffs.noipG*0.75) {
+        if(G.flags.eliteMode && G.flags.year === 2) {
+            showScene('NOIP未达线，跳过省选，直接进入CTT选拔。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, cttDay1); } }]);
+        } else if(G.flags.year === 3) {
+            showScene('NOIP得分：'+score+'（纯参与，不影响后续）', [{text:'继续', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]);
+        } else {
+            if(G.flags.year === 1) {
+                showScene('📉NOIP未晋级', [{text:'明年再战', action:function(){ advanceYear(); }}, {text:'退役', action:function(){ endGame('退役'); } }]);
             } else {
-                showScene('🥇NOI总分 ' + total + '\n' + award + '\n入选国家集训队！高三将进行国家队选拔。', [{text:'继续', action:function(){
-                    G.flags.year = 3; G.flags.term = '上学期'; G.flags.stage = 'prep'; updateDisplay();
-                    freeTraining(5, seniorCSPContest);
-                } }]);
+                endGame('NOIP未达线，竞赛生涯结束');
             }
         }
     } else {
-        if (G.flags.eliteMode) {
-            showScene('NOI总分 ' + total + '\n' + award + '\n未获金牌，但你仍可继续国家队选拔。', [{text:'继续', action:function(){
-                G.flags.stage = 'prep'; updateDisplay();
-                freeTraining(3, cttDay1);
-            } }]);
-        } else if (G.flags.year === 2) { endGame('高二NOI未能获得金牌'); }
-        else { showScene('NOI总分 ' + total + '\n' + award, [{text:'明年再战', action:function(){ advanceYear(); } }, {text:'退役', action:function(){ endGame('退役'); } }]); }
+        if(G.flags.year === 3) {
+            showScene('NOIP得分：'+score+'（纯参与）', [{text:'继续', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]);
+        } else {
+            showScene('🏅NOIP：'+score+'分\n'+award, [{text:'进入省选训练', action:function(){ G.flags.stage='prep'; freeTraining(3, provDay1); } }]);
+        }
     }
 }
-function checkCTTResult(total) { G.flags.scores.ctt = total; var award = getCTTAward(total); addAward(award); if (total >= G.cutoffs.cttP) { wcTraining(function(){ ctsDay1(); }); } else { if (G.flags.sprintBQualified && G.flags.year !== 3) { showScene('CTT 未通过，但你有 NOI 金牌资格，高三可继续冲刺B。', [{text:'进入高三冲刺B', action:function(){ G.flags.year = 3; G.flags.term = '上学期'; G.flags.stage = 'prep'; updateDisplay(); freeTraining(5, seniorCSPContest); } }]); } else { endGame('CTT未通过'); } } }
-function checkCTSResult(ctsTotal) { var dailyScore = Math.min(100, G.flags.wcQuality * 10); var finalScore = Math.floor(G.flags.scores.ctt * 0.54 + ctsTotal * 0.36 + dailyScore * 0.1); G.flags.scores.cts = ctsTotal; var award = getCTSAward(finalScore); addAward(award); if (finalScore >= G.cutoffs.ctsP) { showScene('🏆 加权总分：' + finalScore + '\n' + award + '\n入选国家队！', [{text:'备战IOI', action:function(){ G.flags.stage = 'prep'; updateDisplay(); freeTraining(3, ioiDay1); } }]); } else { if (G.flags.sprintBQualified && G.flags.year !== 3) { showScene('CTS 未通过，但你有 NOI 金牌资格，高三可继续冲刺B。', [{text:'进入高三冲刺B', action:function(){ G.flags.year = 3; G.flags.term = '上学期'; G.flags.stage = 'prep'; updateDisplay(); freeTraining(5, seniorCSPContest); } }]); } else { endGame('CTS 未通过'); } } }
-function advanceYear() { if (G.flags.year >= 2) { endGame('竞赛生涯结束'); return; } G.flags.year++; G.player.代码力 = clamp(Math.floor(G.player.代码力 * 0.8) + 15, 0, 150); G.player.心态 = Math.floor(G.player.心态 * 0.8); G.player.知识 = Math.floor(G.player.知识 * 0.8); G.player.社交 = Math.floor(G.player.社交 * 0.8); adjustCutoffs(); showScene('重新开始，这次是高二了。', [{text:'开始新赛季', action:function(){ G.flags.stage = 'prep'; updateDisplay(); freeTraining(5, cspContest); } }]); }
 
-function selectStrategy(next) { var recommend = ''; if (G.player.代码力 < 40) recommend = ' 💡推荐：稳扎稳打'; else if (G.player.知识 > 70) recommend = ' 💡推荐：放手一搏'; else if (G.player.心态 < 40) recommend = ' 💡推荐：心态调整'; showScene('🎯 选择本场策略：' + recommend, [{text:'稳扎稳打（绿色+15%）', action:function(){ G.flags.strategy='steady'; next(); } }, {text:'放手一搏（黄色+20%）', action:function(){ G.flags.strategy='risky'; next(); } }, {text:'心态调整（跳题额外+5心态）', action:function(){ G.flags.strategy='mood'; next(); } }]); }
-function startContest(name, probs, desc, next) {
+function checkProvResult(weighted) {
+    var award = getProvAward(weighted);
+    addAward(award);
+    if(award.indexOf('未入选') !== -1) {
+        G.flags.provQualified = false;
+        if(G.flags.eliteMode && G.flags.year === 2) {
+            showScene('省选未入选省队，但精英路线允许继续参加CTT选拔。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, cttDay1); } }]);
+        } else if(G.flags.year === 3) {
+            showScene('省选未入选（纯参与），继续。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, noiDay1); } }]);
+        } else {
+            if(G.flags.year === 1) {
+                showScene('💧省选未入选', [{text:'明年再战', action:function(){ advanceYear(); }}, {text:'退役', action:function(){ endGame('退役'); } }]);
+            } else {
+                endGame('省选未入选，竞赛生涯结束');
+            }
+        }
+    } else {
+        G.flags.provQualified = true;
+        if(G.flags.year === 3) {
+            showScene('省选入选（纯参与），继续NOI。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, noiDay1); } }]);
+        } else {
+            showScene('🌟省选加权总分 '+weighted+'\n'+award, [{text:'备战NOI', action:function(){ G.flags.stage='prep'; freeTraining(3, noiDay1); } }]);
+        }
+    }
+}
+
+function checkNOIResult(total) {
+    G.flags.scores.noi = total;
+    G.flags.scores.noiHistory.push({year:G.flags.year, score:total});
+    var award = getNOIAward(total);
+    addAward(award);
+    if(total >= G.cutoffs.noiG) {
+        unlockAch('NOI金牌');
+        if(G.flags.year === 1) {
+            G.flags.eliteMode = true;
+            G.flags.sprintBQualified = true;
+            showScene('🥇NOI总分 '+total+'\n'+award+'\n\n你以高一身份获得金牌，入选国家集训队！\n高二将进入精英路线。', [{text:'继续', action:function(){
+                G.flags.year = 2;
+                G.flags.term = '上学期';
+                G.flags.stage = 'prep';
+                updateDisplay();
+                freeTraining(5, cspContest);
+            }}]);
+        } else if(G.flags.year === 2) {
+            G.flags.sprintBQualified = true;
+            if(G.flags.cttFailed) {
+                showScene('🥇高二NOI金牌！虽然CTT未通过，但你获得了高三冲刺B的资格。', [{text:'进入高三', action:function(){
+                    G.flags.year = 3;
+                    G.flags.term = '上学期';
+                    G.flags.stage = 'prep';
+                    updateDisplay();
+                    freeTraining(5, seniorCSPContest);
+                }}]);
+            } else {
+                showScene('🥇高二NOI金牌！你将获得高三冲刺B资格。', [{text:'继续', action:function(){
+                    G.flags.year = 3;
+                    G.flags.term = '上学期';
+                    G.flags.stage = 'prep';
+                    updateDisplay();
+                    freeTraining(5, seniorCSPContest);
+                }}]);
+            }
+        } else {
+            endGame('高三NOI金牌，但已无后续比赛。');
+        }
+    } else {
+        if(G.flags.year === 1) {
+            showScene('NOI总分 '+total+'\n'+award, [{text:'明年再战', action:function(){ advanceYear(); }}, {text:'退役', action:function(){ endGame('退役'); } }]);
+        } else if(G.flags.year === 2) {
+            if(G.flags.cttFailed && G.flags.provQualified) {
+                endGame('高二NOI未获金牌，无缘高三冲刺B。');
+            } else {
+                endGame('高二NOI未获金牌，竞赛生涯结束。');
+            }
+        } else {
+            endGame('NOI未获金牌，竞赛生涯结束。');
+        }
+    }
+}
+
+function checkCTTResult(total) {
+    G.flags.scores.ctt = total;
+    var award = getCTTAward(total);
+    addAward(award);
+    if(total >= G.cutoffs.cttP) {
+        G.flags.cttFailed = false;
+        showScene('✅ CTT选拔通过！你将进入WC冬令营。', [{text:'进入冬令营', action:function(){
+            wcTraining(function(){ ctsDay1(); });
+        }}]);
+    } else {
+        G.flags.cttFailed = true;
+        if(G.flags.year === 2) {
+            if(G.flags.provQualified) {
+                showScene('❌ CTT未通过，但省选进队，你可以参加高二NOI争取金牌以获得高三冲刺B资格。', [{text:'参加NOI', action:function(){
+                    G.flags.stage = 'prep';
+                    freeTraining(3, noiDay1);
+                }}]);
+            } else {
+                endGame('CTT未通过且省选未进队，无缘NOI，竞赛结束。');
+            }
+        } else if(G.flags.year === 3) {
+            endGame('高三CTT未通过，无缘国家队。');
+        } else {
+            endGame('CTT未通过，无缘国家队。');
+        }
+    }
+}
+
+function checkCTSResult(ctsTotal) {
+    var dailyScore = Math.min(100, G.flags.wcQuality * 10);
+    var finalScore = Math.floor(G.flags.scores.ctt * 0.54 + ctsTotal * 0.36 + dailyScore * 0.1);
+    G.flags.scores.cts = ctsTotal;
+    var award = getCTSAward(finalScore);
+    addAward(award);
+    if(finalScore >= G.cutoffs.ctsP) {
+        showScene('🏆 加权总分：'+finalScore+'\n'+award+'\n入选国家队！', [{text:'备战IOI', action:function(){ G.flags.stage='prep'; updateDisplay(); freeTraining(3, ioiDay1); } }]);
+    } else {
+        if(G.flags.sprintBQualified && G.flags.year !== 3) {
+            showScene('CTS未通过，但你有金牌资格，高三可继续冲刺B。', [{text:'进入高三冲刺B', action:function(){
+                G.flags.year = 3;
+                G.flags.term = '上学期';
+                G.flags.stage = 'prep';
+                updateDisplay();
+                freeTraining(5, seniorCSPContest);
+            }}]);
+        } else {
+            endGame('CTS未通过，无缘国家队。');
+        }
+    }
+}
+
+function advanceYear() {
+    if(G.flags.year >= 2) { endGame('竞赛生涯结束'); return; }
+    G.flags.year++;
+    G.flags.term = '上学期';
+    G.player.代码力 = clamp(Math.floor(G.player.代码力*0.8)+15,0,150);
+    G.player.心态 = Math.floor(G.player.心态*0.8);
+    G.player.知识 = Math.floor(G.player.知识*0.8);
+    G.player.社交 = Math.floor(G.player.社交*0.8);
+    adjustCutoffs();
+    showScene('重新开始，这次是高二了。', [{text:'开始新赛季', action:function(){ G.flags.stage='prep'; updateDisplay(); freeTraining(5, cspContest); } }]);
+}
+
+// ===== 比赛卡牌系统（完整）=====
+function selectStrategy(next) { var recommend=''; if(G.player.代码力<40) recommend=' 💡推荐：稳扎稳打'; else if(G.player.知识>70) recommend=' 💡推荐：放手一搏'; else if(G.player.心态<40) recommend=' 💡推荐：心态调整'; showScene('🎯 选择本场策略：'+recommend, [{text:'稳扎稳打（绿色+15%）', action:function(){ G.flags.strategy='steady'; next(); } }, {text:'放手一搏（黄色+20%）', action:function(){ G.flags.strategy='risky'; next(); } }, {text:'心态调整（跳题额外+5心态）', action:function(){ G.flags.strategy='mood'; next(); } }]); }
+function startContest(name,probs,desc,next){
     G.flags.stage='contest'; G.flags.curContest=name; G.flags.cMaxP=probs; G.flags.round=0;
-    G.flags.cScore = (G.flags.identity && G.flags.identity.sp === 'mood_recover') ? -10 : 0;
+    G.flags.cScore = (G.flags.identity && G.flags.identity.sp==='mood_recover') ? -10 : 0;
     G.flags.cProbScore=0; G.flags.nextProbBonus=false; G.flags.curProbBonus=false; G.flags.nextCb=next; G.flags.rerollCount=0; G.flags.lastAction=null;
     G.flags.moodRecoverUsed = false;
     G.flags.contestTier = getContestTier(name);
     G.flags.lastDanceTriggered = false; G.flags.lastDanceTurns = 0; G.flags.lastWasEvent = false;
-    showScene('🏁 ' + name + ' (' + getTierLabel(G.flags.contestTier) + ')\n' + desc + '\n题目数：' + probs + '题', [{text:'开始比赛', action:function(){ selectStrategy(function(){ showItemUseOptions(function(){ contestRound(); }); }); } }]);
+    showScene('🏁 '+name+' ('+getTierLabel(G.flags.contestTier)+')\n'+desc+'\n题目数：'+probs+'题', [{text:'开始比赛', action:function(){ selectStrategy(function(){ showItemUseOptions(function(){ contestRound(); }); }); } }]);
 }
-
-// ===== 比赛核心逻辑 =====
 function showCardsForCurrentRound() {
     var m = getEventMult();
     if (G.player.社交 > 60 && Math.random() < 0.25) { addScore(Math.floor(5 * m.pos)); addLog('🤝 队友的信任让你更有信心，额外+' + Math.floor(5 * m.pos) + '分'); }
@@ -898,8 +994,6 @@ function contestRound() {
     if (G.player.心态 < 20 && !G.flags.lastDanceTriggered) { updStat('心态', -5); addLog('⚡退役诅咒：心态低于20，每回合额外-5心态。'); }
     showCardsForCurrentRound();
 }
-
-// ===== 修改后的 endContest（已加固） =====
 function endContest() {
     if (G.flags.gameOver) return;
     var s = G.flags.cScore, next = G.flags.nextCb;
@@ -947,7 +1041,6 @@ function endContest() {
         }
     }, 500);
 }
-
 function endGame(msg) {
     G.flags.stage = 'ending'; G.flags.gameOver = true;
     if (G.flags.hiddenFlags.darkestMood <= 5) unlockHidden('至暗时刻');
@@ -965,7 +1058,7 @@ function endGame(msg) {
 // ===== 初始化 =====
 function init() {
     ensureArrays();
-    updateDisplay(); 
+    updateDisplay();
     addLog('欢迎，OIer。');
     initVolume();
     mainMenu();

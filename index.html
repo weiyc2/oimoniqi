@@ -198,7 +198,8 @@ var G = {
         provQualified: false,
         cspPassed: false,
         cttFailed: false,
-        sleepCount: 0
+        sleepCount: 0,
+        剩余回合加成: 1
     },
     cutoffs:{}, achievements:[], hiddenAch:[], awards:[]
 };
@@ -214,6 +215,7 @@ function ensureArrays() {
     if (!G.flags.contestPlayed) G.flags.contestPlayed = {csp:false,noip:false,pd1:false,pd2:false,noi:false,ctt:false,cts:false,ioi:false};
     if (!G.flags.rivals) G.flags.rivals = [];
     if (!G.flags.wcHistory) G.flags.wcHistory = [];
+    if (G.flags.剩余回合加成 === undefined) G.flags.剩余回合加成 = 1;
 }
 function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 
@@ -465,8 +467,18 @@ var RAND_EV = [
         {text: function(m){ return "深呼吸 (心态+"+calcActualTrainDelta('心态', Math.floor(10*m.pos))+"，跳过当前回合)"; }, action: function(cb,m){ updStat('心态', Math.floor(10*m.pos)); cb(); } },
         {text: function(m){ return "硬写 (代码力"+calcActualTrainDelta('代码力', -Math.floor(15*m.neg))+")"; }, action: function(cb,m){ updStat('代码力', -Math.floor(15*m.neg)); cb(); } }
     ], negative:true },
+    // ========== 修复：灵感爆发（本题得分+20%） ==========
     {text:"💡灵感爆发。", choices:[
-        {text: function(m){ return "立刻修改 (代码力"+calcActualTrainDelta('代码力', -Math.floor(8*m.neg))+"，本题得分+20%)"; }, action: function(cb,m){ updStat('代码力', -Math.floor(8*m.neg)); cb(); } }
+        {text: function(m){ return "立刻修改 (代码力"+calcActualTrainDelta('代码力', -Math.floor(8*m.neg))+"，本题得分+20%)"; }, action: function(cb,m){ 
+            updStat('代码力', -Math.floor(8*m.neg));
+            // 增加当前题目已得分的20%（不超过100）
+            var bonus = Math.floor(G.flags.cProbScore * 0.2);
+            if (bonus > 0) {
+                addScore(bonus);
+                addLog('💡 灵感爆发：本题额外+'+bonus+'分');
+            }
+            cb(); 
+        } }
     ], negative:false },
     {text:"🚪队友提前交卷。", choices:[
         {text: function(m){ var extra = (G.flags.identity && G.flags.identity.id === '天赋怪') ? Math.floor(10*m.neg) : 0; return "感到压力 (心态"+calcActualTrainDelta('心态', -Math.floor(10*m.neg) - extra)+(extra ? " (天赋怪额外-10)" : "")+")"; }, action: function(cb,m){ var p = -Math.floor(10*m.neg); if (G.flags.identity && G.flags.identity.id === '天赋怪') p -= Math.floor(10*m.neg); updStat('心态', p); cb(); } },
@@ -518,7 +530,7 @@ function startNewGame() {
     G.flags.items = []; if (G.flags.difficulty === 'hell') { G.flags.items.push('免死金牌'); addLog('🔥 地狱难度初始赠送免死金牌'); }
     G.flags.hiddenFlags = {darkestMood:100, luckyCount:0, grinderClean:0, 社交低:false, 社交高:false};
     var savedIdentity = G.flags.identity;
-    G.flags = { year:1, term:'上学期', stage:'prep', scores:{csp:0,noip:0,pd1:0,pd2:0,noi:0,ctt:0,cts:0,ioi:0, cttD1:0, cttD2:0, cttD3:0}, eventsLog:[], gameOver:false, trainingCount:0, trainingMax:5, curContest:'', round:0, cScore:0, cMaxP:0, cProbScore:0, identity:savedIdentity, lastDanceTurns:0, lastDanceTriggered:false, moodRecoverUsed:false, nextProbBonus:false, curProbBonus:false, nextCb:null, fortune:G.flags.fortune, rivals:G.flags.rivals, items:G.flags.items, difficulty:G.flags.difficulty, diary:G.flags.diary, hiddenFlags:G.flags.hiddenFlags, skipNextRound:false, rerollCount:0, noiBonus:0, bestScore:0, lowestMood:100, strategy:null, lastAction:null, contestPlayed:{csp:false,noip:false,pd1:false,pd2:false,noi:false,ctt:false,cts:false,ioi:false}, contestTier:1, lastWasEvent:false, wcQuality:0, wcTrainCount:0, eliteMode:false, sprintBQualified:false, wcHistory:[], provQualified:false, cspPassed:false, cttFailed:false, sleepCount:0 };
+    G.flags = { year:1, term:'上学期', stage:'prep', scores:{csp:0,noip:0,pd1:0,pd2:0,noi:0,ctt:0,cts:0,ioi:0, cttD1:0, cttD2:0, cttD3:0}, eventsLog:[], gameOver:false, trainingCount:0, trainingMax:5, curContest:'', round:0, cScore:0, cMaxP:0, cProbScore:0, identity:savedIdentity, lastDanceTurns:0, lastDanceTriggered:false, moodRecoverUsed:false, nextProbBonus:false, curProbBonus:false, nextCb:null, fortune:G.flags.fortune, rivals:G.flags.rivals, items:G.flags.items, difficulty:G.flags.difficulty, diary:G.flags.diary, hiddenFlags:G.flags.hiddenFlags, skipNextRound:false, rerollCount:0, noiBonus:0, bestScore:0, lowestMood:100, strategy:null, lastAction:null, contestPlayed:{csp:false,noip:false,pd1:false,pd2:false,noi:false,ctt:false,cts:false,ioi:false}, contestTier:1, lastWasEvent:false, wcQuality:0, wcTrainCount:0, eliteMode:false, sprintBQualified:false, wcHistory:[], provQualified:false, cspPassed:false, cttFailed:false, sleepCount:0, 剩余回合加成:1 };
     adjustCutoffs(); addLog('高一新生，OI之旅开始！'); prologuePrep();
 }
 
@@ -573,7 +585,6 @@ function showTrainingOptions(){
     var baseSportM=5, baseSportC=3;
     var baseSocialS=8, baseSocialK=4, baseSocialM=1;
     var baseSleepC=5, baseSleepM=2;
-    // 睡眠显示值：应用难度修正，疲劳由当前 sleepCount 决定
     var sleepC = Math.max(1, Math.floor((G.flags.sleepCount >= 2 ? 2 : 5) * getDiff().trainGainMul));
     var sleepM = Math.max(1, Math.floor((G.flags.sleepCount >= 2 ? 1 : 2) * getDiff().trainGainMul));
     var fatigueHint = (G.flags.sleepCount >= 2) ? '（疲劳减半）' : '';
@@ -587,7 +598,8 @@ function showTrainingOptions(){
     var soS = calcActualTrainDelta('社交', baseSocialS);
     var soK = calcActualTrainDelta('知识', baseSocialK);
     var soM = calcActualTrainDelta('心态', baseSocialM);
-    var retireText = (G.flags.identity && G.flags.identity.id==='退役边缘人') ? ICON.trainRetire+'看退役记 (心态+'+calcActualTrainDelta('心态',8)+')' : ICON.trainRetire+'看退役记 (心态'+calcActualTrainDelta('心态',-3)+', 知识+'+calcActualTrainDelta('知识',3)+', 代码力+'+calcActualTrainDelta('代码力',3)+')';
+    var isChenMo = (G.flags.identity && G.flags.identity.id==='退役边缘人');
+    var retireText = isChenMo ? ICON.trainRetire+'看退役记 (心态+'+calcActualTrainDelta('心态',8)+') [陈墨专属]' : ICON.trainRetire+'看退役记 (心态'+calcActualTrainDelta('心态',-3)+', 知识+'+calcActualTrainDelta('知识',3)+', 代码力+'+calcActualTrainDelta('代码力',3)+')';
     var opts = [
         {text: ICON.trainStudy+'刷题巩固 (知识+'+sK+' 代码力+'+sC+' 心态'+sM+')', action:function(){ updStat('知识',6); updStat('代码力',3); updStat('心态',-1); G.flags.diary.push('刷题巩固'); G.flags.sleepCount = 0; afterTrainAction(); } },
         {text: ICON.trainDeep+'钻研算法 (知识+'+dK+' 心态'+dM+')', action:function(){ updStat('知识',10); updStat('心态',-2); G.flags.diary.push('钻研算法'); G.flags.sleepCount = 0; afterTrainAction(); } },
@@ -596,11 +608,9 @@ function showTrainingOptions(){
         {text: ICON.trainSleep+'保证睡眠 (代码力+'+sleepC+' 心态+'+sleepM+')' + fatigueHint, action:function(){
             var cGain = 5, mGain = 2;
             if (G.flags.sleepCount >= 2) { cGain = 2; mGain = 1; }
-            // 手动应用难度修正（与显示一致）
             var trainMul = getDiff().trainGainMul;
             cGain = Math.max(1, Math.floor(cGain * trainMul));
             mGain = Math.max(1, Math.floor(mGain * trainMul));
-            // 直接更新属性，避免重复修正
             var codeMax = (G.flags.identity && G.flags.identity.sp === 'code_cap') ? 150 : 100;
             G.player.代码力 = clamp(G.player.代码力 + cGain, 0, codeMax);
             G.player.心态 = clamp(G.player.心态 + mGain, 0, 100);
@@ -609,7 +619,7 @@ function showTrainingOptions(){
             G.flags.sleepCount = (G.flags.sleepCount || 0) + 1;
             afterTrainAction();
         } },
-        {text: retireText, action:function(){ if(G.flags.identity && G.flags.identity.id==='退役边缘人'){ updStat('心态',8); G.flags.diary.push('看退役记'); } else { updStat('心态',-3); updStat('知识',3); updStat('代码力',3); G.flags.diary.push('看退役记'); } G.flags.sleepCount = 0; afterTrainAction(); } },
+        {text: retireText, action:function(){ if(isChenMo){ updStat('心态',8); G.flags.diary.push('看退役记'); } else { updStat('心态',-3); updStat('知识',3); updStat('代码力',3); G.flags.diary.push('看退役记'); } G.flags.sleepCount = 0; afterTrainAction(); } },
         {text: ICON.trainDiary+'查看训练日记', action:function(){ showDiary(); } }
     ];
     showScene('训练 ('+G.flags.trainingCount+'/'+G.flags.trainingMax+'):', opts);
@@ -950,6 +960,7 @@ function startContest(name,probs,desc,next){
     G.flags.moodRecoverUsed = false;
     G.flags.contestTier = getContestTier(name);
     G.flags.lastDanceTriggered = false; G.flags.lastDanceTurns = 0; G.flags.lastWasEvent = false;
+    G.flags.剩余回合加成 = 1; // 重置加成
     showScene('🏁 '+name+' ('+getTierLabel(G.flags.contestTier)+')\n'+desc+'\n题目数：'+probs+'题', [{text:'开始比赛', action:function(){ selectStrategy(function(){ showItemUseOptions(function(){ contestRound(); }); }); } }]);
 }
 
@@ -984,6 +995,8 @@ function showCardsForCurrentRound() {
     var c8 = Math.round(8 * costMul * tierCostMul), c15 = Math.round(15 * costMul * tierCostMul), c12 = Math.round(12 * costMul * tierCostMul), c20 = Math.round(20 * costMul * tierCostMul);
     var moodMul = G.player.心态 > 70 ? 1.05 : G.player.心态 < 30 ? 0.85 : 1;
     var safeMul = (G.flags.strategy === 'steady') ? 1.15 : 1, riskMul = (G.flags.strategy === 'risky') ? 1.2 : 1;
+    // 应用剩余回合加成（算分崩溃事件）
+    var remainingMul = G.flags.剩余回合加成 || 1;
     var phase = G.flags.round % 3, problemNum = Math.floor(G.flags.round / 3) + 1;
     
     var contestName = G.flags.curContest;
@@ -993,7 +1006,7 @@ function showCardsForCurrentRound() {
     var baseDifficulty = difficultyArr[probIndex] || 1.0;
     
     var knowledgeMul = 0.4 + G.player.知识 / 100 * 1.1;
-    var totalMul = baseDifficulty * knowledgeMul * moodMul * tierScoreMul;
+    var totalMul = baseDifficulty * knowledgeMul * moodMul * tierScoreMul * remainingMul;
     if (teamBonus) totalMul *= 1.1;
     
     var baseJumpMood = 10;
@@ -1024,10 +1037,11 @@ function showCardsForCurrentRound() {
             {text: ICON.yellow + '跳题 (0分, 心态+' + jumpMood + ')', action: function(){ skipProblem(jumpMood); } }
         ];
     } else {
-        var dp = clamp(0.9 + diff.duipaiAdd, 0.2, 1), rerollLeft = 3 - G.flags.rerollCount;
+        var dp = clamp(0.9 + diff.duipaiAdd, 0.2, 1);
+        var rerollLeft = 3 - G.flags.rerollCount;
         var segChoices = [
             {text: ICON.green + '简单测试 (+' + Math.floor(10 * diff.scoreMul * totalMul * safeMul) + '分)', action: function(){ addScore(Math.floor(10 * diff.scoreMul * totalMul * safeMul)); G.flags.lastAction='test'; afterCard(); } },
-            {text: ICON.yellow + '写对拍 (代码力-' + c15 + ', ' + Math.floor(dp * 100) + '% +' + Math.floor(25 * diff.scoreMul * totalMul * riskMul) + '分)', action: function(){ updStat('代码力', hc ? -Math.round(c15/2) : -c15); if (Math.random() < dp) addScore(Math.floor(25 * diff.scoreMul * totalMul * riskMul)); G.flags.lastAction='check'; afterCard(); } },
+            {text: ICON.yellow + '写对拍 (代码力-' + c15 + ', ' + Math.round(dp * 100) + '% +' + Math.floor(25 * diff.scoreMul * totalMul * riskMul) + '分)', action: function(){ updStat('代码力', hc ? -Math.round(c15/2) : -c15); if (Math.random() < dp) addScore(Math.floor(25 * diff.scoreMul * totalMul * riskMul)); G.flags.lastAction='check'; afterCard(); } },
             {text: ICON.yellow + '跳题 (0分, 心态+' + jumpMood + ')', action: function(){ skipProblem(jumpMood); } }
         ];
         if (rerollLeft > 0) { 
@@ -1047,10 +1061,17 @@ function showCardsForCurrentRound() {
     if (id && id.id === '天赋怪' && G.player.知识 > 60) lc = 0.12;
     if (id && id.id === '退役边缘人' && G.player.心态 < 20) lc = 0.18;
     lc = Math.max(0.03, lc - (tier - 1) * 0.008);
-    if (Math.random() < lc) cards.push({text: ICON.gold + '传说灵感 (+' + Math.floor(80 * tierScoreMul * m.pos * baseDifficulty * knowledgeMul) + '分, 心态+10, 无消耗)', action: function(){ addScore(Math.floor(80 * tierScoreMul * m.pos * baseDifficulty * knowledgeMul)); updStat('心态', Math.floor(10 * m.pos)); G.flags.lastAction='legend'; playTone(880, 0.12); showFloatText('⭐ 传说灵感！', '#e84393'); addLog('✨ 灵光一闪！'); afterCard(); } });
-    if (id && id.id === '刷题机器' && Math.random() < 0.3) { 
-        var readScore = Math.floor(10 * m.pos * baseDifficulty * knowledgeMul);
-        cards.push({text: ICON.red + '读错题 (心态-' + Math.floor(20 * m.neg) + ', +' + readScore + '分)', action: function(){ updStat('心态', -Math.floor(20 * m.neg)); addScore(readScore); G.flags.hiddenFlags.grinderClean++; G.flags.lastAction='read'; afterCard(); } }); 
+    if (Math.random() < lc) {
+        var legendScore = Math.floor(80 * tierScoreMul * m.pos * baseDifficulty * knowledgeMul);
+        cards.push({text: ICON.gold + '传说灵感 (+' + legendScore + '分, 心态+10, 无消耗) [概率' + Math.round(lc*100) + '%]', action: function(){ addScore(legendScore); updStat('心态', Math.floor(10 * m.pos)); G.flags.lastAction='legend'; playTone(880, 0.12); showFloatText('⭐ 传说灵感！', '#e84393'); addLog('✨ 灵光一闪！'); afterCard(); } });
+    }
+    // 刷题机器：读错题概率动态
+    if (id && id.id === '刷题机器') {
+        var readProb = 0.3 + (G.flags.difficulty === 'hard' ? 0.1 : G.flags.difficulty === 'hell' ? 0.15 : 0);
+        if (Math.random() < readProb) { 
+            var readScore = Math.floor(10 * m.pos * baseDifficulty * knowledgeMul);
+            cards.push({text: ICON.red + '读错题 (心态-' + Math.floor(20 * m.neg) + ', +' + readScore + '分) [刷题机器专属]', action: function(){ updStat('心态', -Math.floor(20 * m.neg)); addScore(readScore); G.flags.hiddenFlags.grinderClean++; G.flags.lastAction='read'; afterCard(); } }); 
+        }
     }
     if (!cards.some(function(c){ return c.text.indexOf('跳题') !== -1; })) cards.push({text: ICON.yellow + '跳题 (0分, 心态+' + jumpMood + ')', action: function(){ skipProblem(jumpMood); } });
     if (G.player.代码力 < 30) {
@@ -1074,9 +1095,15 @@ function afterCard() {
         if (G.player.社交 > 60) choices.push({text: "💬和旁边人交流思路 (知识+" + Math.floor(5 * m.pos) + "，心态+" + Math.floor(3 * m.pos) + ")", action: function(){ updStat('知识', Math.floor(5 * m.pos)); updStat('心态', Math.floor(3 * m.pos)); afterSpecial(); } });
         showScene("👀 第4回合 · 诱惑\n\n你旁边的人开始对拍，他的屏幕上一排绿色AC。你忍不住想看。", choices); return;
     }
+    // ========== 修复：算分崩溃（剩余回合分数+20%） ==========
     if (G.flags.round === 6) {
         showScene("🧮 第7回合 · 自我怀疑\n\n你按了一下计算器。就算后面全满分，总分也够呛。", [
-            {text: "🎯算分崩溃 (心态-" + Math.floor(15 * m.neg) + "，剩余回合分数+20%)", action: function(){ updStat('心态', -Math.floor(15 * m.neg)); afterSpecial(); } },
+            {text: "🎯算分崩溃 (心态-" + Math.floor(15 * m.neg) + "，剩余回合分数+20%)", action: function(){ 
+                updStat('心态', -Math.floor(15 * m.neg)); 
+                G.flags.剩余回合加成 = 1.2; 
+                addLog('⚠️ 剩余回合分数+20%');
+                afterSpecial(); 
+            } },
             {text: "🧘不再想分数 (心态+" + Math.floor(10 * m.pos) + ")", action: function(){ updStat('心态', Math.floor(10 * m.pos)); afterSpecial(); } }
         ]); return;
     }
@@ -1169,6 +1196,7 @@ function endContest() {
         var em = getDiff().expMul || 1;
         var mult = (G.flags.fortune === 'disaster') ? 1.7 : 1;
         mult *= em;
+        if (G.flags.lastDanceTriggered) mult *= 1.3;
         var b = Math.min(60, Math.floor((Math.floor(s / 6) + 4) * mult));
         if (G.player.社交 > 70) b = Math.floor(b * 1.2);
         updStat('代码力', b);

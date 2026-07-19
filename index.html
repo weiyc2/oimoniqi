@@ -319,7 +319,7 @@ function addScore(d) { if (G.flags.gameOver) return; if (d > 0 && G.flags.identi
 function useItem(type) { var idx = G.flags.items.indexOf(type); if (idx === -1) return false; G.flags.items.splice(idx, 1); var mul = getDiff().itemEffectMul || 1; switch(type) { case '免死金牌': updStat('心态', Math.floor(20*mul)); break; case '咖啡': updStat('代码力', Math.floor(25*mul)); break; case '小抄': addScore(Math.floor(30*mul)); break; case '幸运符': addScore(Math.floor(15*mul)); break; } addLog('🎒主动使用道具：'+type); updateDisplay(); return true; }
 function showItemUseOptions(next) { if (G.flags.items.length === 0) { next(); return; } var choices = G.flags.items.map(function(item){ return { text:'使用 '+item, action: function(){ useItem(item); showItemUseOptions(next); } }; }); choices.push({text:'不使用道具', action: function(){ next(); } }); showScene('🎒 选择要使用的道具（可连续使用多个）：', choices); }
 
-// ===== 事件库（完整，已修正所有 txt 使用 calcActualTrainDelta）=====
+// ===== 事件库（完整）=====
 var TRAIN_EV = {
     study: [
         {text: ICON.eventStudy+"你打开洛谷准备刷题，结果网站502。", eff: function(m){ updStat('心态', -Math.floor(3*m.neg)); }, txt: function(m){ return '心态'+calcActualTrainDelta('心态', -Math.floor(3*m.neg)); } },
@@ -573,6 +573,7 @@ function showTrainingOptions(){
     var baseSportM=5, baseSportC=3;
     var baseSocialS=8, baseSocialK=4, baseSocialM=1;
     var baseSleepC=5, baseSleepM=2;
+    // 睡眠显示值：应用难度修正，疲劳由当前 sleepCount 决定
     var sleepC = Math.max(1, Math.floor((G.flags.sleepCount >= 2 ? 2 : 5) * getDiff().trainGainMul));
     var sleepM = Math.max(1, Math.floor((G.flags.sleepCount >= 2 ? 1 : 2) * getDiff().trainGainMul));
     var fatigueHint = (G.flags.sleepCount >= 2) ? '（疲劳减半）' : '';
@@ -595,8 +596,15 @@ function showTrainingOptions(){
         {text: ICON.trainSleep+'保证睡眠 (代码力+'+sleepC+' 心态+'+sleepM+')' + fatigueHint, action:function(){
             var cGain = 5, mGain = 2;
             if (G.flags.sleepCount >= 2) { cGain = 2; mGain = 1; }
-            updStat('代码力', cGain);
-            updStat('心态', mGain);
+            // 手动应用难度修正（与显示一致）
+            var trainMul = getDiff().trainGainMul;
+            cGain = Math.max(1, Math.floor(cGain * trainMul));
+            mGain = Math.max(1, Math.floor(mGain * trainMul));
+            // 直接更新属性，避免重复修正
+            var codeMax = (G.flags.identity && G.flags.identity.sp === 'code_cap') ? 150 : 100;
+            G.player.代码力 = clamp(G.player.代码力 + cGain, 0, codeMax);
+            G.player.心态 = clamp(G.player.心态 + mGain, 0, 100);
+            addLog('💤 睡眠：代码力+'+cGain+' 心态+'+mGain);
             G.flags.diary.push('保证睡眠');
             G.flags.sleepCount = (G.flags.sleepCount || 0) + 1;
             afterTrainAction();
@@ -728,7 +736,7 @@ function checkSeniorCSPResult(score) {
     }
 }
 
-// ===== 比赛结果判定（核心修复）=====
+// ===== 比赛结果判定（核心）=====
 function checkCSPResult(score) {
     G.flags.scores.csp = score;
     var award = getCSPAward(score);
@@ -1131,7 +1139,7 @@ function contestRound() {
     showCardsForCurrentRound();
 }
 
-// ===== 关键修复：endContest 统一调用 next =====
+// ===== endContest 统一调用 next（修复爆零问题）=====
 function endContest() {
     if (G.flags.gameOver) return;
     var s = G.flags.cScore, next = G.flags.nextCb;
@@ -1168,7 +1176,6 @@ function endContest() {
         addLog('📈比赛经验：代码力+'+b+' 心态+'+Math.floor(b*0.6));
     }
     setTimeout(function() {
-        // 统一调用 next(s)，由判定函数处理
         if (typeof next !== 'function') {
             addLog('❌ 错误：比赛回调函数缺失，返回主菜单');
             showScene('流程错误，请重新开始。', [{text:'返回主菜单', action:mainMenu}]);

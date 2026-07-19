@@ -277,7 +277,6 @@ function addLog(msg) {
 function showFloatText(text, color) { var div = document.createElement('div'); div.className = 'float-text'; div.style.color = color||'#f1c40f'; div.textContent = text; document.body.appendChild(div); setTimeout(function(){ div.remove(); }, 2000); }
 function predictTrainDelta(delta) { if (delta > 0) return Math.max(1, Math.floor(delta * (getDiff().trainGainMul||1))); if (delta < 0) { if (G.player.社交 > 50) return Math.ceil(delta/2); return delta; } return delta; }
 
-// 仅对知识和社交递减
 function applyDiminishing(stat, delta) {
     if (delta <= 0) return delta;
     if (stat === '知识' && G.player.知识 > 70) return Math.floor(delta * 0.5);
@@ -320,7 +319,7 @@ function addScore(d) { if (G.flags.gameOver) return; if (d > 0 && G.flags.identi
 function useItem(type) { var idx = G.flags.items.indexOf(type); if (idx === -1) return false; G.flags.items.splice(idx, 1); var mul = getDiff().itemEffectMul || 1; switch(type) { case '免死金牌': updStat('心态', Math.floor(20*mul)); break; case '咖啡': updStat('代码力', Math.floor(25*mul)); break; case '小抄': addScore(Math.floor(30*mul)); break; case '幸运符': addScore(Math.floor(15*mul)); break; } addLog('🎒主动使用道具：'+type); updateDisplay(); return true; }
 function showItemUseOptions(next) { if (G.flags.items.length === 0) { next(); return; } var choices = G.flags.items.map(function(item){ return { text:'使用 '+item, action: function(){ useItem(item); showItemUseOptions(next); } }; }); choices.push({text:'不使用道具', action: function(){ next(); } }); showScene('🎒 选择要使用的道具（可连续使用多个）：', choices); }
 
-// ===== 事件库（完整，所有 txt 已修正为 calcActualTrainDelta）=====
+// ===== 事件库（完整，已修正所有 txt 使用 calcActualTrainDelta）=====
 var TRAIN_EV = {
     study: [
         {text: ICON.eventStudy+"你打开洛谷准备刷题，结果网站502。", eff: function(m){ updStat('心态', -Math.floor(3*m.neg)); }, txt: function(m){ return '心态'+calcActualTrainDelta('心态', -Math.floor(3*m.neg)); } },
@@ -574,11 +573,9 @@ function showTrainingOptions(){
     var baseSportM=5, baseSportC=3;
     var baseSocialS=8, baseSocialK=4, baseSocialM=1;
     var baseSleepC=5, baseSleepM=2;
-    // 修正：睡眠显示值乘以难度修正，与实际执行一致
     var sleepC = Math.max(1, Math.floor((G.flags.sleepCount >= 2 ? 2 : 5) * getDiff().trainGainMul));
     var sleepM = Math.max(1, Math.floor((G.flags.sleepCount >= 2 ? 1 : 2) * getDiff().trainGainMul));
     var fatigueHint = (G.flags.sleepCount >= 2) ? '（疲劳减半）' : '';
-    // 其他选项使用 calcActualTrainDelta
     var sK = calcActualTrainDelta('知识', baseStudyK);
     var sC = calcActualTrainDelta('代码力', baseStudyC);
     var sM = calcActualTrainDelta('心态', baseStudyM);
@@ -622,7 +619,7 @@ function afterTrainAction(){
 }
 function showDiary(){ var all=G.flags.diary.length?G.flags.diary.join('\n'):'暂无训练日记。'; showScene('📖 训练日记\n\n'+all, [{text:'返回', action:showTrainingOptions}]); }
 
-// ===== 比赛入口（含学期切换）=====
+// ===== 比赛入口 =====
 function cspContest(){ G.flags.contestPlayed.csp=true; startContest('CSP-S',4,'', function(s){ checkCSPResult(s); }); }
 function noipContest(){ G.flags.contestPlayed.noip=true; startContest('NOIP',4,'省级联赛', function(s){ checkNOIPResult(s); }); }
 function provDay1(){
@@ -731,24 +728,27 @@ function checkSeniorCSPResult(score) {
     }
 }
 
-// ===== 比赛结果判定 =====
+// ===== 比赛结果判定（核心修复）=====
 function checkCSPResult(score) {
     G.flags.scores.csp = score;
     var award = getCSPAward(score);
     addAward(award);
-    if(score <= 0) {
-        if(G.flags.year === 1) {
-            showScene('💔CSP-S爆零', [{text:'明年再战', action:function(){ advanceYear(); }}, {text:'退役', action:function(){ endGame('退役'); } }]);
-        } else if(G.flags.year === 2 && G.flags.eliteMode) {
+    if (score <= 0) {
+        if (G.flags.year === 1) {
+            showScene('💔CSP-S爆零', [
+                {text:'明年再战', action:function(){ advanceYear(); }},
+                {text:'退役', action:function(){ endGame('退役'); }}
+            ]);
+        } else if (G.flags.year === 2 && G.flags.eliteMode) {
             showScene('CSP-S爆零，失去NOIP和省选资格，但精英路线直接进入CTT选拔。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, cttDay1); } }]);
-        } else if(G.flags.year === 3) {
+        } else if (G.flags.year === 3) {
             showScene('CSP-S爆零，失去NOIP参赛资格，但训练继续。', [{text:'继续训练', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]);
         } else {
             endGame('CSP-S爆零，竞赛生涯结束');
         }
     } else {
         G.flags.cspPassed = true;
-        if(G.flags.year === 3) {
+        if (G.flags.year === 3) {
             showScene('CSP-S 得分：'+score+'（纯参与）', [{text:'继续', action:function(){ freeTraining(3, seniorNOIPContest); } }]);
         } else {
             showScene('🎉CSP-S：'+score+'分\n'+award, [{text:'进入NOIP训练', action:function(){ G.flags.stage='prep'; freeTraining(3, noipContest); } }]);
@@ -760,20 +760,21 @@ function checkNOIPResult(score) {
     G.flags.scores.noip = score;
     var award = getNOIPAward(score);
     addAward(award);
-    if(score < G.cutoffs.noipG*0.75) {
-        if(G.flags.eliteMode && G.flags.year === 2) {
+    if (score < G.cutoffs.noipG * 0.75) {
+        if (G.flags.year === 1) {
+            showScene('📉NOIP未晋级', [
+                {text:'明年再战', action:function(){ advanceYear(); }},
+                {text:'退役', action:function(){ endGame('退役'); }}
+            ]);
+        } else if (G.flags.year === 2 && G.flags.eliteMode) {
             showScene('NOIP未达线，跳过省选，直接进入CTT选拔。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, cttDay1); } }]);
-        } else if(G.flags.year === 3) {
+        } else if (G.flags.year === 3) {
             showScene('NOIP得分：'+score+'（纯参与，不影响后续）', [{text:'继续', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]);
         } else {
-            if(G.flags.year === 1) {
-                showScene('📉NOIP未晋级', [{text:'明年再战', action:function(){ advanceYear(); }}, {text:'退役', action:function(){ endGame('退役'); } }]);
-            } else {
-                endGame('NOIP未达线，竞赛生涯结束');
-            }
+            endGame('NOIP未达线，竞赛生涯结束');
         }
     } else {
-        if(G.flags.year === 3) {
+        if (G.flags.year === 3) {
             showScene('NOIP得分：'+score+'（纯参与）', [{text:'继续', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]);
         } else {
             showScene('🏅NOIP：'+score+'分\n'+award, [{text:'进入省选训练', action:function(){ G.flags.stage='prep'; freeTraining(3, provDay1); } }]);
@@ -784,26 +785,26 @@ function checkNOIPResult(score) {
 function checkProvResult(weighted) {
     var award = getProvAward(weighted);
     addAward(award);
-    if(award.indexOf('未入选') !== -1) {
+    if (award.indexOf('未入选') !== -1) {
         G.flags.provQualified = false;
-    } else {
-        G.flags.provQualified = true;
-    }
-    if(G.flags.eliteMode && G.flags.year === 2) {
-        showScene('省选结果已定（' + (G.flags.provQualified ? '入选省队' : '未入选') + '），进入CTT选拔。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, cttDay1); } }]);
-        return;
-    }
-    if(G.flags.year === 3) {
-        showScene('省选加权总分 '+weighted+'\n'+award+'（纯参与）', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, noiDay1); } }]);
-        return;
-    }
-    if(G.flags.provQualified) {
-        showScene('🌟省选加权总分 '+weighted+'\n'+award, [{text:'备战NOI', action:function(){ G.flags.stage='prep'; freeTraining(3, noiDay1); } }]);
-    } else {
-        if(G.flags.year === 1) {
-            showScene('💧省选未入选', [{text:'明年再战', action:function(){ advanceYear(); }}, {text:'退役', action:function(){ endGame('退役'); } }]);
+        if (G.flags.eliteMode && G.flags.year === 2) {
+            showScene('省选未入选省队，但精英路线允许继续参加CTT选拔。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, cttDay1); } }]);
+        } else if (G.flags.year === 3) {
+            showScene('省选未入选（纯参与），继续。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, noiDay1); } }]);
+        } else if (G.flags.year === 1) {
+            showScene('💧省选未入选', [
+                {text:'明年再战', action:function(){ advanceYear(); }},
+                {text:'退役', action:function(){ endGame('退役'); }}
+            ]);
         } else {
             endGame('省选未入选，竞赛生涯结束');
+        }
+    } else {
+        G.flags.provQualified = true;
+        if (G.flags.year === 3) {
+            showScene('省选入选（纯参与），继续NOI。', [{text:'继续', action:function(){ G.flags.stage='prep'; freeTraining(3, noiDay1); } }]);
+        } else {
+            showScene('🌟省选加权总分 '+weighted+'\n'+award, [{text:'备战NOI', action:function(){ G.flags.stage='prep'; freeTraining(3, noiDay1); } }]);
         }
     }
 }
@@ -813,9 +814,9 @@ function checkNOIResult(total) {
     G.flags.scores.noiHistory.push({year:G.flags.year, score:total});
     var award = getNOIAward(total);
     addAward(award);
-    if(total >= G.cutoffs.noiG) {
+    if (total >= G.cutoffs.noiG) {
         unlockAch('NOI金牌');
-        if(G.flags.year === 1) {
+        if (G.flags.year === 1) {
             G.flags.eliteMode = true;
             G.flags.sprintBQualified = true;
             showScene('🥇NOI总分 '+total+'\n'+award+'\n\n你以高一身份获得金牌，入选国家集训队！\n高二将进入精英路线。', [{text:'继续', action:function(){
@@ -825,9 +826,9 @@ function checkNOIResult(total) {
                 updateDisplay();
                 freeTraining(5, cspContest);
             }}]);
-        } else if(G.flags.year === 2) {
+        } else if (G.flags.year === 2) {
             G.flags.sprintBQualified = true;
-            if(G.flags.cttFailed) {
+            if (G.flags.cttFailed) {
                 showScene('🥇高二NOI金牌！虽然CTT未通过，但你获得了高三冲刺B的资格。', [{text:'进入高三', action:function(){
                     G.flags.year = 3;
                     G.flags.term = '上学期';
@@ -848,10 +849,13 @@ function checkNOIResult(total) {
             endGame('高三NOI金牌，但已无后续比赛。');
         }
     } else {
-        if(G.flags.year === 1) {
-            showScene('NOI总分 '+total+'\n'+award, [{text:'明年再战', action:function(){ advanceYear(); }}, {text:'退役', action:function(){ endGame('退役'); } }]);
-        } else if(G.flags.year === 2) {
-            if(G.flags.cttFailed && G.flags.provQualified) {
+        if (G.flags.year === 1) {
+            showScene('NOI总分 '+total+'\n'+award, [
+                {text:'明年再战', action:function(){ advanceYear(); }},
+                {text:'退役', action:function(){ endGame('退役'); }}
+            ]);
+        } else if (G.flags.year === 2) {
+            if (G.flags.cttFailed && G.flags.provQualified) {
                 endGame('高二NOI未获金牌，无缘高三冲刺B。');
             } else {
                 endGame('高二NOI未获金牌，竞赛生涯结束。');
@@ -866,15 +870,15 @@ function checkCTTResult(total) {
     G.flags.scores.ctt = total;
     var award = getCTTAward(total);
     addAward(award);
-    if(total >= G.cutoffs.cttP) {
+    if (total >= G.cutoffs.cttP) {
         G.flags.cttFailed = false;
         showScene('✅ CTT选拔通过！你将进入WC冬令营。', [{text:'进入冬令营', action:function(){
             wcTraining(function(){ ctsDay1(); });
         }}]);
     } else {
         G.flags.cttFailed = true;
-        if(G.flags.year === 2) {
-            if(G.flags.provQualified) {
+        if (G.flags.year === 2) {
+            if (G.flags.provQualified) {
                 showScene('❌ CTT未通过，但省选进队，你可以参加高二NOI争取金牌以获得高三冲刺B资格。', [{text:'参加NOI', action:function(){
                     G.flags.stage = 'prep';
                     freeTraining(3, noiDay1);
@@ -882,7 +886,7 @@ function checkCTTResult(total) {
             } else {
                 endGame('CTT未通过且省选未进队，无缘NOI，竞赛结束。');
             }
-        } else if(G.flags.year === 3) {
+        } else if (G.flags.year === 3) {
             endGame('高三CTT未通过，无缘国家队。');
         } else {
             endGame('CTT未通过，无缘国家队。');
@@ -896,10 +900,10 @@ function checkCTSResult(ctsTotal) {
     G.flags.scores.cts = ctsTotal;
     var award = getCTSAward(finalScore);
     addAward(award);
-    if(finalScore >= G.cutoffs.ctsP) {
+    if (finalScore >= G.cutoffs.ctsP) {
         showScene('🏆 加权总分：'+finalScore+'\n'+award+'\n入选国家队！', [{text:'备战IOI', action:function(){ G.flags.stage='prep'; updateDisplay(); freeTraining(3, ioiDay1); } }]);
     } else {
-        if(G.flags.sprintBQualified && G.flags.year !== 3) {
+        if (G.flags.sprintBQualified && G.flags.year !== 3) {
             showScene('CTS未通过，但你有金牌资格，高三可继续冲刺B。', [{text:'进入高三冲刺B', action:function(){
                 G.flags.year = 3;
                 G.flags.term = '上学期';
@@ -914,13 +918,13 @@ function checkCTSResult(ctsTotal) {
 }
 
 function advanceYear() {
-    if(G.flags.year >= 2) { endGame('竞赛生涯结束'); return; }
+    if (G.flags.year >= 2) { endGame('竞赛生涯结束'); return; }
     G.flags.year++;
     G.flags.term = '上学期';
-    G.player.代码力 = clamp(Math.floor(G.player.代码力*0.8)+15,0,150);
-    G.player.心态 = Math.floor(G.player.心态*0.8);
-    G.player.知识 = Math.floor(G.player.知识*0.8);
-    G.player.社交 = Math.floor(G.player.社交*0.8);
+    G.player.代码力 = clamp(Math.floor(G.player.代码力 * 0.8) + 15, 0, 150);
+    G.player.心态 = Math.floor(G.player.心态 * 0.8);
+    G.player.知识 = Math.floor(G.player.知识 * 0.8);
+    G.player.社交 = Math.floor(G.player.社交 * 0.8);
     adjustCutoffs();
     showScene('重新开始，这次是高二了。', [{text:'开始新赛季', action:function(){ G.flags.stage='prep'; updateDisplay(); freeTraining(5, cspContest); } }]);
 }
@@ -1127,6 +1131,7 @@ function contestRound() {
     showCardsForCurrentRound();
 }
 
+// ===== 关键修复：endContest 统一调用 next =====
 function endContest() {
     if (G.flags.gameOver) return;
     var s = G.flags.cScore, next = G.flags.nextCb;
@@ -1163,27 +1168,24 @@ function endContest() {
         addLog('📈比赛经验：代码力+'+b+' 心态+'+Math.floor(b*0.6));
     }
     setTimeout(function() {
-        if (s <= 0) {
-            endGame(G.flags.curContest + '爆零');
-        } else {
-            if (typeof next !== 'function') {
-                addLog('❌ 错误：比赛回调函数缺失，返回主菜单');
-                showScene('流程错误，请重新开始。', [{text:'返回主菜单', action:mainMenu}]);
-                return;
-            }
-            showScene(G.flags.curContest + '得分：' + s + '分\n\n对手成绩：\n' + rivalStr, [{
-                text: '继续',
-                action: function() {
-                    try {
-                        next(s);
-                    } catch(e) {
-                        console.error('继续按钮执行出错：', e);
-                        addLog('❌ 错误：' + e.message);
-                        showScene('发生错误：' + e.message + '\n请返回主菜单重新开始。', [{text:'返回主菜单', action:mainMenu}]);
-                    }
-                }
-            }]);
+        // 统一调用 next(s)，由判定函数处理
+        if (typeof next !== 'function') {
+            addLog('❌ 错误：比赛回调函数缺失，返回主菜单');
+            showScene('流程错误，请重新开始。', [{text:'返回主菜单', action:mainMenu}]);
+            return;
         }
+        showScene(G.flags.curContest + '得分：' + s + '分\n\n对手成绩：\n' + rivalStr, [{
+            text: '继续',
+            action: function() {
+                try {
+                    next(s);
+                } catch(e) {
+                    console.error('继续按钮执行出错：', e);
+                    addLog('❌ 错误：' + e.message);
+                    showScene('发生错误：' + e.message + '\n请返回主菜单重新开始。', [{text:'返回主菜单', action:mainMenu}]);
+                }
+            }
+        }]);
     }, 500);
 }
 

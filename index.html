@@ -24,10 +24,10 @@
             --stat-bg: #162433;
         }
         [data-theme="light"] {
-            --bg: #eef2f6;
+            --bg: #f0f4f8;
             --panel: #ffffff;
-            --border: #d0d7de;
-            --text: #1e293b;
+            --border: #e2e8f0;
+            --text: #1a202c;
             --gold: #b8860b;
             --blue: #2563eb;
             --green: #16a34a;
@@ -35,11 +35,11 @@
             --purple: #7c3aed;
             --teal: #0d9488;
             --red: #dc2626;
-            --scene-bg: #f8fafc;
-            --choice-bg: #e9edf2;
-            --choice-hover: #d0d7de;
-            --log-bg: #eef2f6;
-            --stat-bg: #e9edf2;
+            --scene-bg: #ffffff;
+            --choice-bg: #edf2f7;
+            --choice-hover: #e2e8f0;
+            --log-bg: #f7fafc;
+            --stat-bg: #f0f4f8;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
@@ -86,7 +86,7 @@
         .tab-container { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
         .tab { background:#2c3e50; padding:6px 12px; border-radius:8px 8px 0 0; cursor:pointer; font-weight:bold; color:#b0c4de; font-size:0.7rem; }
         .tab.active { background:var(--gold); color:#0a0f1a; }
-        [data-theme="light"] .tab { background:#d0d7de; color:#1e293b; }
+        [data-theme="light"] .tab { background:#e2e8f0; color:#1a202c; }
         [data-theme="light"] .tab.active { background:var(--gold); color:#0a0f1a; }
         .notebook {
             background: #fef9e7; color: #2c3e50; padding:18px; border-radius:12px;
@@ -108,9 +108,11 @@
         .icon-orange { color: var(--orange); font-weight:bold; }
         .icon-blue { color: var(--blue); font-weight:bold; }
         .item-box { background:var(--stat-bg); padding:6px 12px; border-radius:8px; margin-bottom:4px; }
-        [data-theme="light"] .stat-bar-bg { background:#d0d7de; }
-        [data-theme="light"] .progress-bar { background:#d0d7de; }
+        [data-theme="light"] .stat-bar-bg { background:#e2e8f0; }
+        [data-theme="light"] .progress-bar { background:#e2e8f0; }
         [data-theme="light"] .volume-panel { color: #64748b; }
+        [data-theme="light"] .notebook { background: #fef9e7; color: #2c3e50; }
+        [data-theme="light"] .item-box { background: #f0f4f8; }
     </style>
 </head>
 <body>
@@ -1153,9 +1155,7 @@ function showCardsForCurrentRound() {
     }
     if (!cards.some(function(c){ return c.text.indexOf('跳题') !== -1; })) cards.push({text: ICON.yellow + '跳题 (0分, 心态+' + jumpMood + ')', action: function(){ skipProblem(jumpMood); } });
 
-    // ===== 修复：移除代码力低于30时强制精简卡牌的逻辑 =====
-    // 原逻辑已删除，玩家始终看到所有可用卡牌（受社交>60影响，最多4张）
-
+    // 移除代码力低于30时强制精简卡牌的逻辑，玩家始终看到所有可用卡牌
     cards = (G.player.社交 > 60) ? cards.slice(0, 4) : cards.slice(0, 3);
     showScene('📝第' + problemNum + '题 · ' + ['思路与实现','编码与构造','调试与提交'][phase] + '\n' + envText + '\n当前总分：' + G.flags.cScore + ' (本题' + G.flags.cProbScore + '/100)', cards, true);
 }

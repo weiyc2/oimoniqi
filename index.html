@@ -169,7 +169,7 @@ var ICON = {
     diffHell: '<span class="icon-red">●</span>',
 };
 
-// ===== 教程（完整）=====
+// ===== 教程 =====
 var tutorialTexts = [
     "欢迎来到OI生涯模拟器！你将扮演一名高一新生，在三年时光里完整经历" + ICON.contestCSP + "CSP-S、" + ICON.contestNOIP + "NOIP、" + ICON.contestProv + "省选、" + ICON.contestNOI + "NOI、" + ICON.contestCTT + "CTT、" + ICON.contestWC + "WC冬令营、" + ICON.contestCTS + "CTS选拔，直至" + ICON.contestIOI + "IOI。游戏的核心是管理四项属性——代码力、心态、知识、社交——在比赛之间的有限训练中提升自己，在每一场比赛中利用卡牌策略争取最好的成绩。比赛失利并不意味着结束，你可以选择\"明年再战\"继续成长。你可以从简单、普通、困难、地狱四种难度中选择，难度会影响分数线、得分倍率、事件概率等几乎所有方面。越高级的比赛（NOI/CTT/CTS/IOI）难度会显著提升，对手也会更强。",
     "游戏开始时，你可以从四位性格鲜明的主角中选择一位，每位都有独特的能力与弱点：\n\n1. 陈墨·退役边缘人：去年普及组爆零，背负着阴影重新开始。当心态彻底崩溃时，会触发\"最后一舞\"，3回合内所有代码力消耗减半，但初始心态只有60。看退役记对他来说是力量的源泉，心态+8。\n\n2. 林思远·天赋怪：初中被称为天才，上了高中却开始失眠。所有比赛得分自动+20%，但队友交卷时心态会额外降低。\n\n3. 张浩·刷题机器：刷了三千题，代码力上限提升至150，初始100，但\"读错题\"的概率翻倍。\n\n4. 苏晓雨·女队独苗：全省唯一进复赛的女生。心态低于30时会自动回复20点（每场比赛仅一次），每场比赛初始分数-10，专属事件可触发下题得分+15%。",
@@ -1152,12 +1152,10 @@ function showCardsForCurrentRound() {
         }
     }
     if (!cards.some(function(c){ return c.text.indexOf('跳题') !== -1; })) cards.push({text: ICON.yellow + '跳题 (0分, 心态+' + jumpMood + ')', action: function(){ skipProblem(jumpMood); } });
-    if (G.player.代码力 < 30) {
-        var jumpCard = cards.filter(function(c){ return c.text.indexOf('跳题') !== -1; })[0];
-        var otherCards = cards.filter(function(c){ return c.text.indexOf('跳题') === -1; });
-        if (otherCards.length > 0) cards = jumpCard ? [jumpCard, otherCards[Math.floor(Math.random() * otherCards.length)]] : [otherCards[0]];
-        else cards = jumpCard ? [jumpCard] : [];
-    }
+
+    // ===== 修复：移除代码力低于30时强制精简卡牌的逻辑 =====
+    // 原逻辑已删除，玩家始终看到所有可用卡牌（受社交>60影响，最多4张）
+
     cards = (G.player.社交 > 60) ? cards.slice(0, 4) : cards.slice(0, 3);
     showScene('📝第' + problemNum + '题 · ' + ['思路与实现','编码与构造','调试与提交'][phase] + '\n' + envText + '\n当前总分：' + G.flags.cScore + ' (本题' + G.flags.cProbScore + '/100)', cards, true);
 }

@@ -6,16 +6,48 @@
     <title>OI生涯模拟器</title>
     <style>
         :root {
-            --bg: #0a0f1a; --panel: #111d2b; --border: #2c3e50; --text: #c8d6e5;
-            --gold: #f1c40f; --blue: #3498db; --green: #2ecc71; --orange: #e67e22;
-            --purple: #9b59b6; --teal: #1abc9c; --red: #e74c3c;
+            --bg: #0a0f1a;
+            --panel: #111d2b;
+            --border: #2c3e50;
+            --text: #c8d6e5;
+            --gold: #f1c40f;
+            --blue: #3498db;
+            --green: #2ecc71;
+            --orange: #e67e22;
+            --purple: #9b59b6;
+            --teal: #1abc9c;
+            --red: #e74c3c;
+            --scene-bg: #1a2e40;
+            --choice-bg: #233b4a;
+            --choice-hover: #2f4d62;
+            --log-bg: #0c1a24;
+            --stat-bg: #162433;
+        }
+        [data-theme="light"] {
+            --bg: #eef2f6;
+            --panel: #ffffff;
+            --border: #d0d7de;
+            --text: #1e293b;
+            --gold: #b8860b;
+            --blue: #2563eb;
+            --green: #16a34a;
+            --orange: #d97706;
+            --purple: #7c3aed;
+            --teal: #0d9488;
+            --red: #dc2626;
+            --scene-bg: #f8fafc;
+            --choice-bg: #e9edf2;
+            --choice-hover: #d0d7de;
+            --log-bg: #eef2f6;
+            --stat-bg: #e9edf2;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
-            background: var(--bg); font-family: system-ui, monospace;
+            background: var(--bg);
+            font-family: system-ui, monospace;
             display: flex; justify-content: center; align-items: center; min-height: 100vh;
             padding: 12px; color: var(--text);
-            background-image: radial-gradient(ellipse at 20% 20%, #1a2f40 0%, #0a0f1a 80%);
+            background-image: radial-gradient(ellipse at 20% 20%, var(--panel) 0%, var(--bg) 80%);
         }
         #game-container {
             width: 100%; max-width: 860px; background: var(--panel);
@@ -31,28 +63,31 @@
         .volume-panel input { width: 70px; }
         .mute-btn { background:none; border:1px solid var(--border); color:var(--text); font-size:1.1rem; cursor:pointer; padding:2px 8px; border-radius:8px; }
         .mute-btn.muted { color:var(--red); border-color:var(--red); }
+        .theme-toggle { background:none; border:1px solid var(--border); color:var(--text); font-size:1.1rem; cursor:pointer; padding:2px 8px; border-radius:8px; margin-left:4px; }
         .year-badge {
             position: absolute; top: 38px; right: 10px; background: var(--gold); color: #0a0f1a;
             font-weight: bold; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; z-index: 10;
         }
-        .stats-panel { display:flex; flex-wrap:wrap; gap:10px; background:#162433; padding:14px; border-radius:14px; font-size:0.8rem; }
+        .stats-panel { display:flex; flex-wrap:wrap; gap:10px; background:var(--stat-bg); padding:14px; border-radius:14px; font-size:0.8rem; }
         .stat-item { flex:1; min-width:70px; }
         .stat-bar-bg { background:#2c3e50; height:6px; border-radius:10px; overflow:hidden; margin:2px 0; }
         .stat-bar-fill { height:100%; border-radius:10px; transition:width 0.4s; }
         .code-fill { background:var(--green); } .mood-fill { background:var(--orange); } .know-fill { background:var(--purple); } .social-fill { background:var(--teal); }
-        #scene-content { background:#1a2e40; border-radius:14px; padding:18px; min-height:160px; line-height:1.6; white-space:pre-wrap; overflow-y:auto; }
+        #scene-content { background:var(--scene-bg); border-radius:14px; padding:18px; min-height:160px; line-height:1.6; white-space:pre-wrap; overflow-y:auto; color:var(--text); }
         .choices-container { display:flex; flex-direction:column; gap:8px; }
-        .choice-btn { background:#233b4a; border:none; color:#f0f4f8; padding:12px 16px; border-radius:12px; font-family:inherit; font-size:0.9rem; cursor:pointer; text-align:left; border-left:5px solid var(--blue); width:100%; }
-        .choice-btn:hover { background:#2f4d62; border-left-color:var(--gold); }
+        .choice-btn { background:var(--choice-bg); border:none; color:var(--text); padding:12px 16px; border-radius:12px; font-family:inherit; font-size:0.9rem; cursor:pointer; text-align:left; border-left:5px solid var(--blue); width:100%; }
+        .choice-btn:hover { background:var(--choice-hover); border-left-color:var(--gold); }
         .choice-btn:disabled { opacity:0.6; }
-        #log-panel { background:#0c1a24; border-radius:8px; padding:8px; max-height:80px; overflow-y:auto; font-size:0.7rem; display:flex; flex-direction:column; gap:4px; }
-        .log-entry { padding:2px 6px; background:#162433; }
-        .log-entry.gain { color:#2ecc71; } .log-entry.loss { color:#e74c3c; }
+        #log-panel { background:var(--log-bg); border-radius:8px; padding:8px; max-height:80px; overflow-y:auto; font-size:0.7rem; display:flex; flex-direction:column; gap:4px; color:var(--text); }
+        .log-entry { padding:2px 6px; background:var(--stat-bg); color:var(--text); }
+        .log-entry.gain { color:var(--green); } .log-entry.loss { color:var(--red); }
         .float-text { position:fixed; top:30%; left:50%; transform:translate(-50%,-50%); font-size:2.5rem; font-weight:bold; color:var(--gold); z-index:999; pointer-events:none; animation:floatUp 2s ease-out forwards; }
         @keyframes floatUp { 0%{opacity:1;top:30%;} 100%{opacity:0;top:10%;} }
         .tab-container { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
         .tab { background:#2c3e50; padding:6px 12px; border-radius:8px 8px 0 0; cursor:pointer; font-weight:bold; color:#b0c4de; font-size:0.7rem; }
         .tab.active { background:var(--gold); color:#0a0f1a; }
+        [data-theme="light"] .tab { background:#d0d7de; color:#1e293b; }
+        [data-theme="light"] .tab.active { background:var(--gold); color:#0a0f1a; }
         .notebook {
             background: #fef9e7; color: #2c3e50; padding:18px; border-radius:12px;
             font-family: cursive; line-height: 2;
@@ -64,14 +99,18 @@
         .progress-fill { height:100%; background:var(--gold); transition:width 0.3s; }
         .diff-dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:middle; box-shadow:0 0 6px currentColor; }
         .diff-easy { background:#2ecc71; } .diff-normal { background:#f1c40f; } .diff-hard { background:#e67e22; } .diff-hell { background:#e74c3c; }
-        .icon-green { color: #2ecc71; font-weight:bold; }
-        .icon-yellow { color: #f1c40f; font-weight:bold; }
-        .icon-red { color: #e74c3c; font-weight:bold; }
-        .icon-purple { color: #9b59b6; font-weight:bold; }
-        .icon-gold { color: #f1c40f; font-weight:bold; }
-        .icon-teal { color: #1abc9c; font-weight:bold; }
-        .icon-orange { color: #e67e22; font-weight:bold; }
-        .icon-blue { color: #3498db; font-weight:bold; }
+        .icon-green { color: var(--green); font-weight:bold; }
+        .icon-yellow { color: var(--gold); font-weight:bold; }
+        .icon-red { color: var(--red); font-weight:bold; }
+        .icon-purple { color: var(--purple); font-weight:bold; }
+        .icon-gold { color: var(--gold); font-weight:bold; }
+        .icon-teal { color: var(--teal); font-weight:bold; }
+        .icon-orange { color: var(--orange); font-weight:bold; }
+        .icon-blue { color: var(--blue); font-weight:bold; }
+        .item-box { background:var(--stat-bg); padding:6px 12px; border-radius:8px; margin-bottom:4px; }
+        [data-theme="light"] .stat-bar-bg { background:#d0d7de; }
+        [data-theme="light"] .progress-bar { background:#d0d7de; }
+        [data-theme="light"] .volume-panel { color: #64748b; }
     </style>
 </head>
 <body>
@@ -82,6 +121,7 @@
         <input type="range" min="0" max="0.15" step="0.01" value="0.07" id="volSlider">
         <span id="volVal">7%</span>
         <button class="mute-btn" id="mute-btn" title="静音/取消静音">🔊</button>
+        <button class="theme-toggle" id="themeToggle" title="切换亮色/暗色模式">🌙</button>
     </div>
     <span id="year-badge" class="year-badge">高一·上学期</span>
     <div id="stats-panel" class="stats-panel"></div>
@@ -147,6 +187,30 @@ var tutorialTexts = [
 var audioCtx = null, muted = false, volume = 0.07;
 function getCtx() { if (!audioCtx) try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {} if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
 function playTone(f,d,t,v) { if (muted) return; try { t=t||'sine'; v=v||volume; var c=getCtx(); if(!c)return; var o=c.createOscillator(), g=c.createGain(); o.type=t; o.frequency.setValueAtTime(f,c.currentTime); g.gain.setValueAtTime(v,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d); o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+d); } catch(e) {} }
+
+// ===== 主题切换 =====
+function initTheme() {
+    var toggle = document.getElementById('themeToggle');
+    if (!toggle) return;
+    var saved = localStorage.getItem('oi-theme');
+    if (saved === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        toggle.textContent = '☀️';
+    }
+    toggle.addEventListener('click', function() {
+        var current = document.documentElement.getAttribute('data-theme');
+        if (current === 'light') {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('oi-theme', 'dark');
+            this.textContent = '🌙';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+            localStorage.setItem('oi-theme', 'light');
+            this.textContent = '☀️';
+        }
+    });
+}
+
 function initVolume() {
     var slider = document.getElementById('volSlider'), valSpan = document.getElementById('volVal'), muteBtn = document.getElementById('mute-btn');
     slider.addEventListener('input', function(e) { volume = parseFloat(e.target.value); valSpan.textContent = Math.round(volume * 100) + '%'; });
@@ -244,7 +308,7 @@ function showScene(text, choices, progress) {
     if (progress) { var pct = (G.flags.round/(G.flags.cMaxP*3))*100; content = '<div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div>'+content; }
     document.getElementById('scene-content').innerHTML = content;
     var cont = document.getElementById('choices-container'); cont.innerHTML = '';
-    if (G.flags.items.length > 0) { var div = document.createElement('div'); div.className='item-box'; div.innerHTML = '<span style="color:#1abc9c;">🎒背包：</span>'+G.flags.items.map(function(i){ return '<span style="background:#233b4a;padding:4px 10px;border-radius:20px;">'+i+'</span>'; }).join(''); cont.appendChild(div); }
+    if (G.flags.items.length > 0) { var div = document.createElement('div'); div.className='item-box'; div.innerHTML = '<span style="color:var(--teal);">🎒背包：</span>'+G.flags.items.map(function(i){ return '<span style="background:var(--choice-bg);padding:4px 10px;border-radius:20px;color:var(--text);">'+i+'</span>'; }).join(''); cont.appendChild(div); }
     choices.forEach(function(c) {
         var btn = document.createElement('button');
         btn.className = 'choice-btn';
@@ -317,11 +381,29 @@ function updStat(stat, delta) {
     }
 }
 
-function addScore(d) { if (G.flags.gameOver) return; if (d > 0 && G.flags.identity && G.flags.identity.sp === 'score_boost') d = Math.floor(d * 1.2); var cap = 100; if (d < 0) { G.flags.cScore += d; G.flags.cProbScore = Math.max(0, G.flags.cProbScore + d); return; } if (G.flags.curProbBonus) d = Math.floor(d * 1.15); var room = Math.max(0, cap - Math.max(0, G.flags.cProbScore)); var add = Math.min(d, room); G.flags.cScore += add; G.flags.cProbScore += add; }
+function addScore(d) {
+    if (G.flags.gameOver) return;
+    if (d > 0 && G.flags.identity && G.flags.identity.sp === 'score_boost') d = Math.floor(d * 1.2);
+    var cap = 100;
+    if (d < 0) {
+        G.flags.cScore += d;
+        G.flags.cProbScore = Math.max(0, G.flags.cProbScore + d);
+        if (G.flags.cScore < 0) G.flags.cScore = 0;
+        return;
+    }
+    if (G.flags.curProbBonus) d = Math.floor(d * 1.15);
+    var room = Math.max(0, cap - Math.max(0, G.flags.cProbScore));
+    var add = Math.min(d, room);
+    G.flags.cScore += add;
+    G.flags.cProbScore += add;
+    var maxTotal = G.flags.cMaxP * 100;
+    if (G.flags.cScore > maxTotal) G.flags.cScore = maxTotal;
+}
+
 function useItem(type) { var idx = G.flags.items.indexOf(type); if (idx === -1) return false; G.flags.items.splice(idx, 1); var mul = getDiff().itemEffectMul || 1; switch(type) { case '免死金牌': updStat('心态', Math.floor(20*mul)); break; case '咖啡': updStat('代码力', Math.floor(25*mul)); break; case '小抄': addScore(Math.floor(30*mul)); break; case '幸运符': addScore(Math.floor(15*mul)); break; } addLog('🎒主动使用道具：'+type); updateDisplay(); return true; }
 function showItemUseOptions(next) { if (G.flags.items.length === 0) { next(); return; } var choices = G.flags.items.map(function(item){ return { text:'使用 '+item, action: function(){ useItem(item); showItemUseOptions(next); } }; }); choices.push({text:'不使用道具', action: function(){ next(); } }); showScene('🎒 选择要使用的道具（可连续使用多个）：', choices); }
 
-// ===== 事件库（完整）=====
+// ===== 事件库 =====
 var TRAIN_EV = {
     study: [
         {text: ICON.eventStudy+"你打开洛谷准备刷题，结果网站502。", eff: function(m){ updStat('心态', -Math.floor(3*m.neg)); }, txt: function(m){ return '心态'+calcActualTrainDelta('心态', -Math.floor(3*m.neg)); } },
@@ -467,11 +549,9 @@ var RAND_EV = [
         {text: function(m){ return "深呼吸 (心态+"+calcActualTrainDelta('心态', Math.floor(10*m.pos))+"，跳过当前回合)"; }, action: function(cb,m){ updStat('心态', Math.floor(10*m.pos)); cb(); } },
         {text: function(m){ return "硬写 (代码力"+calcActualTrainDelta('代码力', -Math.floor(15*m.neg))+")"; }, action: function(cb,m){ updStat('代码力', -Math.floor(15*m.neg)); cb(); } }
     ], negative:true },
-    // ========== 修复：灵感爆发（本题得分+20%） ==========
     {text:"💡灵感爆发。", choices:[
         {text: function(m){ return "立刻修改 (代码力"+calcActualTrainDelta('代码力', -Math.floor(8*m.neg))+"，本题得分+20%)"; }, action: function(cb,m){ 
             updStat('代码力', -Math.floor(8*m.neg));
-            // 增加当前题目已得分的20%（不超过100）
             var bonus = Math.floor(G.flags.cProbScore * 0.2);
             if (bonus > 0) {
                 addScore(bonus);
@@ -515,7 +595,7 @@ function getActionEnv(action) {
 }
 
 // ===== 主菜单与教程 =====
-function mainMenu() { G.flags.stage='main'; showScene('🌟 OI生涯模拟器\n\n从高一到高三，经历完整的OI之路。', [{text:'🎮 开始游戏', action:function(){ selectDifficulty(); } }, {text:'📖玩法说明', action:function(){ showTutorial(0); } }, {text:'🏛️档案馆', action:function(){ showArchive(); } }, {text:'📜更新日志', action:function(){ showScene('🎉 2026.7.13\nV1.0.0 游戏上架\n\n🔧2026.7.17\nV1.0.2 调整了难度,分数线与对手成绩\n\n🛠️2026.7.18\nV1.1.0 训练与比赛机制全面平衡', [{text:'返回', action:mainMenu}]); } }]); }
+function mainMenu() { G.flags.stage='main'; showScene('🌟 OI生涯模拟器\n\n从高一到高三，经历完整的OI之路。', [{text:'🎮 开始游戏', action:function(){ selectDifficulty(); } }, {text:'📖玩法说明', action:function(){ showTutorial(0); } }, {text:'🏛️档案馆', action:function(){ showArchive(); } }, {text:'📜更新日志', action:function(){ showScene('🎉 2026.7.13\nV1.0.0 游戏上架\n\n🔧2026.7.17\nV1.0.2 调整了难度,分数线与对手成绩\n\n🛠️2026.7.18\nV1.1.0 训练与比赛机制全面平衡\n\n🔦 2026.7.20\nV1.1.5 新增亮色模式', [{text:'返回', action:mainMenu}]); } }]); }
 function showTutorial(idx) { var tabs = ['欢迎','身份系统','核心属性','训练与成长','道具系统','比赛流程','卡牌详解','事件系统','晋级与结局','操作指南']; var html = '<div class="tab-container">'+tabs.map(function(t,i){ return '<span class="tab '+(i===idx?'active':'')+'" data-idx="'+i+'">'+t+'</span>'; }).join('')+'</div><div class="notebook">'+tutorialTexts[idx]+'</div>'; showScene(html, [{text:'返回主菜单', action:mainMenu}]); document.querySelectorAll('.tab').forEach(function(tab){ tab.onclick = function(){ showTutorial(parseInt(this.dataset.idx)); }; }); }
 function showArchive() { var achList = '🏆 成就：\n'+(G.achievements.length?G.achievements.join('\n'):'暂无')+'\n\n🔒 未解锁隐藏成就：\n'; var hc={'至暗时刻':'心态降至5点以下','欧皇降临':'撞原题3次以上','燃烧殆尽':'触发最后一舞并获得奖项','冷酷机器':'刷题机器角色且读错题不超过2次','良师益友':'社交>80','独行侠':'社交<40且获得奖项'}; for(var k in hc){ if(G.hiddenAch.indexOf(k)===-1) achList += k+'：'+hc[k]+'\n'; } showScene('🏛️ OI档案馆\n\n🏅 获得奖项：\n'+(G.awards.length?G.awards.join('\n'):'暂无')+'\n\n'+achList+'\n📖 训练日记：\n'+(G.flags.diary.length?G.flags.diary.join('\n'):'暂无'), [{text:'返回', action:mainMenu}]); }
 
@@ -746,7 +826,7 @@ function checkSeniorCSPResult(score) {
     }
 }
 
-// ===== 比赛结果判定（核心）=====
+// ===== 比赛结果判定 =====
 function checkCSPResult(score) {
     G.flags.scores.csp = score;
     var award = getCSPAward(score);
@@ -953,14 +1033,14 @@ function startContest(name,probs,desc,next){
     G.flags.stage='contest'; G.flags.curContest=name; G.flags.cMaxP=probs; G.flags.round=0;
     G.flags.cScore = (G.flags.identity && G.flags.identity.sp==='mood_recover') ? -10 : 0;
     if (G.player.社交 > 50 && Math.random() < G.player.社交 * 0.005) {
-        G.flags.cScore += 5;
-        addLog('🤝 队友鼓励，初始心态+5');
+        addScore(5);
+        addLog('🤝 队友鼓励，初始+5分');
     }
     G.flags.cProbScore=0; G.flags.nextProbBonus=false; G.flags.curProbBonus=false; G.flags.nextCb=next; G.flags.rerollCount=0; G.flags.lastAction=null;
     G.flags.moodRecoverUsed = false;
     G.flags.contestTier = getContestTier(name);
     G.flags.lastDanceTriggered = false; G.flags.lastDanceTurns = 0; G.flags.lastWasEvent = false;
-    G.flags.剩余回合加成 = 1; // 重置加成
+    G.flags.剩余回合加成 = 1;
     showScene('🏁 '+name+' ('+getTierLabel(G.flags.contestTier)+')\n'+desc+'\n题目数：'+probs+'题', [{text:'开始比赛', action:function(){ selectStrategy(function(){ showItemUseOptions(function(){ contestRound(); }); }); } }]);
 }
 
@@ -995,7 +1075,6 @@ function showCardsForCurrentRound() {
     var c8 = Math.round(8 * costMul * tierCostMul), c15 = Math.round(15 * costMul * tierCostMul), c12 = Math.round(12 * costMul * tierCostMul), c20 = Math.round(20 * costMul * tierCostMul);
     var moodMul = G.player.心态 > 70 ? 1.05 : G.player.心态 < 30 ? 0.85 : 1;
     var safeMul = (G.flags.strategy === 'steady') ? 1.15 : 1, riskMul = (G.flags.strategy === 'risky') ? 1.2 : 1;
-    // 应用剩余回合加成（算分崩溃事件）
     var remainingMul = G.flags.剩余回合加成 || 1;
     var phase = G.flags.round % 3, problemNum = Math.floor(G.flags.round / 3) + 1;
     
@@ -1065,7 +1144,6 @@ function showCardsForCurrentRound() {
         var legendScore = Math.floor(80 * tierScoreMul * m.pos * baseDifficulty * knowledgeMul);
         cards.push({text: ICON.gold + '传说灵感 (+' + legendScore + '分, 心态+10, 无消耗) [概率' + Math.round(lc*100) + '%]', action: function(){ addScore(legendScore); updStat('心态', Math.floor(10 * m.pos)); G.flags.lastAction='legend'; playTone(880, 0.12); showFloatText('⭐ 传说灵感！', '#e84393'); addLog('✨ 灵光一闪！'); afterCard(); } });
     }
-    // 刷题机器：读错题概率动态
     if (id && id.id === '刷题机器') {
         var readProb = 0.3 + (G.flags.difficulty === 'hard' ? 0.1 : G.flags.difficulty === 'hell' ? 0.15 : 0);
         if (Math.random() < readProb) { 
@@ -1084,7 +1162,7 @@ function showCardsForCurrentRound() {
     showScene('📝第' + problemNum + '题 · ' + ['思路与实现','编码与构造','调试与提交'][phase] + '\n' + envText + '\n当前总分：' + G.flags.cScore + ' (本题' + G.flags.cProbScore + '/100)', cards, true);
 }
 
-// ===== 后续核心函数（完整）=====
+// ===== 后续核心函数 =====
 function afterCard() {
     var m = getEventMult();
     if (G.flags.round === 3) {
@@ -1095,7 +1173,6 @@ function afterCard() {
         if (G.player.社交 > 60) choices.push({text: "💬和旁边人交流思路 (知识+" + Math.floor(5 * m.pos) + "，心态+" + Math.floor(3 * m.pos) + ")", action: function(){ updStat('知识', Math.floor(5 * m.pos)); updStat('心态', Math.floor(3 * m.pos)); afterSpecial(); } });
         showScene("👀 第4回合 · 诱惑\n\n你旁边的人开始对拍，他的屏幕上一排绿色AC。你忍不住想看。", choices); return;
     }
-    // ========== 修复：算分崩溃（剩余回合分数+20%） ==========
     if (G.flags.round === 6) {
         showScene("🧮 第7回合 · 自我怀疑\n\n你按了一下计算器。就算后面全满分，总分也够呛。", [
             {text: "🎯算分崩溃 (心态-" + Math.floor(15 * m.neg) + "，剩余回合分数+20%)", action: function(){ 
@@ -1117,7 +1194,13 @@ function afterCard() {
     }
     if (G.flags.round === 10) {
         showScene("⏳ 第11回合 · 抉择\n\n只剩最后半小时。你还有一题完全没动，但上一题的bug还在。", [
-            {text: "🔧死磕上一题 (失去本回合，上一题分数×1.5)", action: function(){ var newProb = Math.min(100, Math.floor(G.flags.cProbScore * 1.5)); G.flags.cScore += newProb - G.flags.cProbScore; G.flags.cProbScore = newProb; afterSpecial(); } },
+            {text: "🔧死磕上一题 (失去本回合，上一题分数×1.5)", action: function(){ 
+                var newProb = Math.min(100, Math.floor(G.flags.cProbScore * 1.5)); 
+                var diff = newProb - G.flags.cProbScore; 
+                if (diff > 0) addScore(diff);
+                G.flags.cProbScore = newProb;
+                afterSpecial(); 
+            } },
             {text: "🆕放弃debug，开新题 (30%概率爆零，否则+" + Math.floor(40 * m.pos) + ")", action: function(){ if (Math.random() < 0.3) addScore(-Math.floor(30 * m.neg)); else addScore(Math.floor(40 * m.pos)); afterSpecial(); } },
             {text: "📄交白卷，保心态 (心态+" + Math.floor(30 * m.pos) + "，分数不变)", action: function(){ updStat('心态', Math.floor(30 * m.pos)); afterSpecial(); } }
         ]); return;
@@ -1166,7 +1249,6 @@ function contestRound() {
     showCardsForCurrentRound();
 }
 
-// ===== endContest 统一调用 next（修复爆零问题）=====
 function endContest() {
     if (G.flags.gameOver) return;
     var s = G.flags.cScore, next = G.flags.nextCb;
@@ -1244,6 +1326,7 @@ function init() {
     updateDisplay();
     addLog('欢迎，OIer。');
     initVolume();
+    initTheme();
     mainMenu();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -23,8 +23,9 @@
             --log-bg: #0c1a24;
             --stat-bg: #162433;
         }
+        /* ===== 亮色模式（更明亮） ===== */
         [data-theme="light"] {
-            --bg: #f0f4f8;
+            --bg: #f7fafc;
             --panel: #ffffff;
             --border: #e2e8f0;
             --text: #1a202c;
@@ -36,9 +37,9 @@
             --teal: #0d9488;
             --red: #dc2626;
             --scene-bg: #ffffff;
-            --choice-bg: #edf2f7;
+            --choice-bg: #f0f4f8;
             --choice-hover: #e2e8f0;
-            --log-bg: #f7fafc;
+            --log-bg: #f8fafc;
             --stat-bg: #f0f4f8;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -99,7 +100,6 @@
         .choice-btn { background:var(--choice-bg); border:none; color:var(--text); padding:12px 16px; border-radius:12px; font-family:inherit; font-size:0.9rem; cursor:pointer; text-align:left; border-left:5px solid var(--blue); width:100%; position:relative; }
         .choice-btn:hover { background:var(--choice-hover); border-left-color:var(--gold); }
         .choice-btn:disabled { opacity:0.6; }
-        .choice-btn .badge-new { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:var(--gold); color:#0a0f1a; font-size:0.6rem; padding:2px 8px; border-radius:10px; font-weight:bold; }
         #log-panel { background:var(--log-bg); border-radius:8px; padding:8px; max-height:80px; overflow-y:auto; font-size:0.7rem; display:flex; flex-direction:column; gap:4px; color:var(--text); }
         .log-entry { padding:2px 6px; background:var(--stat-bg); color:var(--text); }
         .log-entry.gain { color:var(--green); } .log-entry.loss { color:var(--red); }
@@ -396,7 +396,7 @@ function bounceItemUI() {
     });
 }
 
-// ===== 更新显示（增强：包含警告闪烁）=====
+// ===== 更新显示（增强：包含警告闪烁，仅游戏进行中）=====
 function updateDisplay() {
     ensureArrays();
     var p = G.player;
@@ -409,9 +409,10 @@ function updateDisplay() {
         '<div class="stat-item" data-stat="心态"><span class="stat-label">🧠心态</span><div class="stat-bar-bg"><div class="stat-bar-fill mood-fill" style="width:'+p.心态+'%"></div></div>'+p.心态+'/100</div>'+
         '<div class="stat-item" data-stat="知识"><span class="stat-label">📚知识</span><div class="stat-bar-bg"><div class="stat-bar-fill know-fill" style="width:'+p.知识+'%"></div></div>'+p.知识+'/100</div>'+
         '<div class="stat-item" data-stat="社交"><span class="stat-label">🤝社交</span><div class="stat-bar-bg"><div class="stat-bar-fill social-fill" style="width:'+p.社交+'%"></div></div>'+p.社交+'/100</div>';
-    // 低属性警告
+    
+    // ===== 低属性警告：仅当游戏进行中（不是主菜单）才触发 =====
     var items = document.querySelectorAll('.stat-item');
-    if (items.length >= 4) {
+    if (G.flags.stage !== 'main' && items.length >= 4) {
         var warns = [p.代码力 < 20, p.心态 < 30, p.知识 < 25, p.社交 < 25];
         items.forEach(function(el, i) {
             el.classList.remove('warning');
@@ -431,7 +432,15 @@ function updateDisplay() {
                 if (icon) icon.remove();
             }
         });
+    } else {
+        // 主菜单时清除所有警告
+        items.forEach(function(el) {
+            el.classList.remove('warning');
+            var icon = el.querySelector('.stat-warn-icon');
+            if (icon) icon.remove();
+        });
     }
+    
     var badge = document.getElementById('year-badge');
     if (G.flags.year > 0 && G.flags.stage !== 'main') {
         badge.style.display = 'block';

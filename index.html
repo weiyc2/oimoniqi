@@ -26,8 +26,8 @@
         [data-theme="light"] {
             --bg: #ffffff;
             --panel: #ffffff;
-            --border: #e5e7eb;
-            --text: #111111;
+            --border: #e0e0e0;
+            --text: #000000;
             --gold: #b8860b;
             --blue: #2563eb;
             --green: #16a34a;
@@ -36,10 +36,10 @@
             --teal: #0d9488;
             --red: #dc2626;
             --scene-bg: #ffffff;
-            --choice-bg: #f8f9fa;
-            --choice-hover: #e9ecef;
-            --log-bg: #f8f9fa;
-            --stat-bg: #f8f9fa;
+            --choice-bg: #f5f5f5;
+            --choice-hover: #e8e8e8;
+            --log-bg: #f9f9f9;
+            --stat-bg: #f5f5f5;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
@@ -107,7 +107,7 @@
         .tab-container { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
         .tab { background:#2c3e50; padding:6px 12px; border-radius:8px 8px 0 0; cursor:pointer; font-weight:bold; color:#b0c4de; font-size:0.7rem; }
         .tab.active { background:var(--gold); color:#0a0f1a; }
-        [data-theme="light"] .tab { background:#e5e7eb; color:#111; }
+        [data-theme="light"] .tab { background:#e0e0e0; color:#000; }
         [data-theme="light"] .tab.active { background:var(--gold); color:#0a0f1a; }
         .notebook {
             background: #fef9e7; color: #2c3e50; padding:18px; border-radius:12px;
@@ -129,11 +129,11 @@
         .icon-orange { color: var(--orange); font-weight:bold; }
         .icon-blue { color: var(--blue); font-weight:bold; }
         .item-box { background:var(--stat-bg); padding:6px 12px; border-radius:8px; margin-bottom:4px; }
-        [data-theme="light"] .stat-bar-bg { background:#e5e7eb; }
-        [data-theme="light"] .progress-bar { background:#e5e7eb; }
-        [data-theme="light"] .volume-panel { color: #64748b; }
+        [data-theme="light"] .stat-bar-bg { background:#d0d0d0; }
+        [data-theme="light"] .progress-bar { background:#d0d0d0; }
+        [data-theme="light"] .volume-panel { color: #666; }
         [data-theme="light"] .notebook { background: #fef9e7; color: #2c3e50; }
-        [data-theme="light"] .item-box { background: #f8f9fa; }
+        [data-theme="light"] .item-box { background: #f5f5f5; }
 
         .timeline { position:relative; padding-left:24px; }
         .timeline::before { content:''; position:absolute; left:6px; top:0; bottom:0; width:2px; background:var(--border); }
@@ -310,9 +310,6 @@ var IDS = [
     { id:'女队独苗', name:'苏晓雨', title:'女队独苗', desc:'全省唯一进入复赛的女生，用键盘回应偏见。', abi:'心态低于30时自动回复20点（每场比赛仅一次）', weak:'每场比赛初始分数-10，专属事件可触发下题+15%', ic:70,im:68,ik:32,is:40, sp:'mood_recover' }
 ];
 
-// ===== 函数映射表，用于存档恢复回调 =====
-var functionMap = {};
-
 var G = {
     player: { 代码力:0, 心态:0, 知识:0, 社交:0 },
     flags: {
@@ -340,8 +337,7 @@ var G = {
         careerHistory: [],
         tutorialStep: 0,
         tutorialDone: false,
-        problemScores: [],
-        nextCbName: '' // 新增：保存回调函数名
+        problemScores: []
     },
     cutoffs:{}, achievements:[], hiddenAch:[], awards:[]
 };
@@ -362,7 +358,6 @@ function ensureArrays() {
     if (G.flags.tutorialStep === undefined) G.flags.tutorialStep = 0;
     if (G.flags.tutorialDone === undefined) G.flags.tutorialDone = false;
     if (!G.flags.problemScores) G.flags.problemScores = [];
-    if (G.flags.nextCbName === undefined) G.flags.nextCbName = '';
 }
 function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 
@@ -455,8 +450,6 @@ function updateDisplay() {
         badge.style.display = 'block';
         badge.textContent = (['','高一','高二','高三'][G.flags.year] || '') + '·' + G.flags.term;
     } else { badge.style.display = 'none'; }
-    
-    saveGame();
 }
 
 function updStat(stat, delta) {
@@ -603,110 +596,6 @@ function calcActualTrainDelta(stat, baseDelta) {
     return delta;
 }
 
-// ===== 保存存档（修复回调） =====
-function saveGame() {
-    try {
-        var saveData = {
-            player: {
-                代码力: G.player.代码力,
-                心态: G.player.心态,
-                知识: G.player.知识,
-                社交: G.player.社交
-            },
-            flags: {
-                year: G.flags.year,
-                term: G.flags.term,
-                stage: G.flags.stage,
-                scores: G.flags.scores,
-                trainingCount: G.flags.trainingCount,
-                trainingMax: G.flags.trainingMax,
-                curContest: G.flags.curContest,
-                round: G.flags.round,
-                cScore: G.flags.cScore,
-                cMaxP: G.flags.cMaxP,
-                cProbScore: G.flags.cProbScore,
-                identity: G.flags.identity,
-                lastDanceTurns: G.flags.lastDanceTurns,
-                lastDanceTriggered: G.flags.lastDanceTriggered,
-                moodRecoverUsed: G.flags.moodRecoverUsed,
-                nextProbBonus: G.flags.nextProbBonus,
-                curProbBonus: G.flags.curProbBonus,
-                fortune: G.flags.fortune,
-                rivals: G.flags.rivals,
-                diary: G.flags.diary,
-                items: G.flags.items,
-                difficulty: G.flags.difficulty,
-                hiddenFlags: G.flags.hiddenFlags,
-                skipNextRound: G.flags.skipNextRound,
-                rerollCount: G.flags.rerollCount,
-                noiBonus: G.flags.noiBonus,
-                bestScore: G.flags.bestScore,
-                bestScoreName: G.flags.bestScoreName,
-                lowestMood: G.flags.lowestMood,
-                strategy: G.flags.strategy,
-                lastAction: G.flags.lastAction,
-                contestPlayed: G.flags.contestPlayed,
-                contestTier: G.flags.contestTier,
-                lastWasEvent: G.flags.lastWasEvent,
-                wcQuality: G.flags.wcQuality,
-                wcTrainCount: G.flags.wcTrainCount,
-                eliteMode: G.flags.eliteMode,
-                sprintBQualified: G.flags.sprintBQualified,
-                wcHistory: G.flags.wcHistory,
-                provQualified: G.flags.provQualified,
-                cspPassed: G.flags.cspPassed,
-                cttFailed: G.flags.cttFailed,
-                sleepCount: G.flags.sleepCount,
-                剩余回合加成: G.flags.剩余回合加成,
-                careerHistory: G.flags.careerHistory,
-                tutorialDone: G.flags.tutorialDone,
-                problemScores: G.flags.problemScores || [],
-                nextCbName: G.flags.nextCbName || ''
-            },
-            achievements: G.achievements,
-            hiddenAch: G.hiddenAch,
-            awards: G.awards,
-            cutoffs: G.cutoffs,
-            timestamp: Date.now()
-        };
-        localStorage.setItem('oi-save', JSON.stringify(saveData));
-    } catch(e) {
-        console.warn('存档失败：', e);
-    }
-}
-
-function loadGame() {
-    try {
-        var raw = localStorage.getItem('oi-save');
-        if (!raw) return false;
-        var data = JSON.parse(raw);
-        G.player = data.player;
-        for (var key in data.flags) {
-            if (data.flags.hasOwnProperty(key)) {
-                G.flags[key] = data.flags[key];
-            }
-        }
-        // 恢复回调函数
-        if (data.flags.nextCbName && functionMap[data.flags.nextCbName]) {
-            G.flags.nextCb = functionMap[data.flags.nextCbName];
-        } else {
-            G.flags.nextCb = null;
-        }
-        G.achievements = data.achievements || [];
-        G.hiddenAch = data.hiddenAch || [];
-        G.awards = data.awards || [];
-        G.cutoffs = data.cutoffs || {};
-        return true;
-    } catch(e) {
-        console.warn('读档失败：', e);
-        return false;
-    }
-}
-
-function hasSave() {
-    return !!localStorage.getItem('oi-save');
-}
-
 // ===== 主菜单 =====
 function mainMenu() {
     G.flags.stage='main';
@@ -719,41 +608,8 @@ function mainMenu() {
         {text:'📖玩法说明', action:function(){ showTutorial(0); } },
         {text:'📊 生涯回顾', action:function(){ showCareerReview(); } },
         {text:'🏛️档案馆', action:function(){ showArchive(); } },
-        {text:'📜更新日志', action:function(){ showScene('🎉 2026.7.13\nV1.0.0 游戏上架\n\n🔧2026.7.17\nV1.0.2 调整了难度,分数线与对手成绩\n\n🛠️2026.7.18\nV1.1.0 训练与比赛机制全面平衡\n\n🔦 2026.7.20\nV1.1.5 新增亮色模式\n\n🚀 2026.7.21\nV1.1.9 新增数值反馈、生涯回顾\n\n✨ 2026.7.26\nV1.2.1 新增悬停、存档、得分明细', [{text:'返回', action:mainMenu}]); } }
+        {text:'📜更新日志', action:function(){ showScene('🎉 2026.7.13\nV1.0.0 游戏上架\n\n🔧2026.7.17\nV1.0.2 调整了难度,分数线与对手成绩\n\n🛠️2026.7.18\nV1.1.0 训练与比赛机制全面平衡\n\n🔦 2026.7.20\nV1.1.5 新增亮色模式\n\n🚀 2026.7.21\nV1.1.9 新增数值反馈、生涯回顾\n\n✨ 2026.7.26\nV1.2.1 新增悬停、得分明细', [{text:'返回', action:mainMenu}]); } }
     ];
-    if (hasSave()) {
-        choices.unshift({text:'💾 继续游戏', action:function(){ 
-            if (loadGame()) {
-                updateDisplay();
-                addLog('📂 读取存档成功');
-                if (G.flags.stage === 'main') { mainMenu(); }
-                else if (G.flags.stage === 'training' || G.flags.stage === 'prep') {
-                    if (G.flags.stage === 'training' && typeof G.flags.nextCb !== 'function') {
-                        addLog('⚠️ 存档异常，返回主菜单');
-                        mainMenu();
-                        return;
-                    }
-                    if (G.flags.stage === 'training') {
-                        trainingStep();
-                    } else {
-                        showScene('📂 继续训练', [{text:'继续', action:function(){ trainingStep(); }}]);
-                    }
-                } else if (G.flags.stage === 'contest') {
-                    if (typeof G.flags.nextCb !== 'function') {
-                        addLog('⚠️ 存档异常，返回主菜单');
-                        mainMenu();
-                        return;
-                    }
-                    contestRound();
-                } else {
-                    mainMenu();
-                }
-            } else {
-                addLog('❌ 读档失败');
-                mainMenu();
-            }
-        }});
-    }
     showScene('🌟 OI生涯模拟器\n\n从高一到高三，经历完整的OI之路。', choices);
 }
 
@@ -836,7 +692,7 @@ function startNewGame() {
     G.flags.items = []; if (G.flags.difficulty === 'hell') { G.flags.items.push('免死金牌'); addLog('🔥 地狱难度初始赠送免死金牌'); }
     G.flags.hiddenFlags = {darkestMood:100, luckyCount:0, grinderClean:0, 社交低:false, 社交高:false};
     var savedIdentity = G.flags.identity;
-    G.flags = { year:1, term:'上学期', stage:'prep', scores:{csp:0,noip:0,pd1:0,pd2:0,noi:0,ctt:0,cts:0,ioi:0, cttD1:0, cttD2:0, cttD3:0}, eventsLog:[], gameOver:false, trainingCount:0, trainingMax:5, curContest:'', round:0, cScore:0, cMaxP:0, cProbScore:0, identity:savedIdentity, lastDanceTurns:0, lastDanceTriggered:false, moodRecoverUsed:false, nextProbBonus:false, curProbBonus:false, nextCb:null, fortune:G.flags.fortune, rivals:G.flags.rivals, items:G.flags.items, difficulty:G.flags.difficulty, diary:G.flags.diary, hiddenFlags:G.flags.hiddenFlags, skipNextRound:false, rerollCount:0, noiBonus:0, bestScore:0, lowestMood:100, strategy:null, lastAction:null, contestPlayed:{csp:false,noip:false,pd1:false,pd2:false,noi:false,ctt:false,cts:false,ioi:false}, contestTier:1, lastWasEvent:false, wcQuality:0, wcTrainCount:0, eliteMode:false, sprintBQualified:false, wcHistory:[], provQualified:false, cspPassed:false, cttFailed:false, sleepCount:0, 剩余回合加成:1, careerHistory:[], tutorialStep:0, tutorialDone:G.flags.tutorialDone, problemScores:[], nextCbName:'' };
+    G.flags = { year:1, term:'上学期', stage:'prep', scores:{csp:0,noip:0,pd1:0,pd2:0,noi:0,ctt:0,cts:0,ioi:0, cttD1:0, cttD2:0, cttD3:0}, eventsLog:[], gameOver:false, trainingCount:0, trainingMax:5, curContest:'', round:0, cScore:0, cMaxP:0, cProbScore:0, identity:savedIdentity, lastDanceTurns:0, lastDanceTriggered:false, moodRecoverUsed:false, nextProbBonus:false, curProbBonus:false, nextCb:null, fortune:G.flags.fortune, rivals:G.flags.rivals, items:G.flags.items, difficulty:G.flags.difficulty, diary:G.flags.diary, hiddenFlags:G.flags.hiddenFlags, skipNextRound:false, rerollCount:0, noiBonus:0, bestScore:0, lowestMood:100, strategy:null, lastAction:null, contestPlayed:{csp:false,noip:false,pd1:false,pd2:false,noi:false,ctt:false,cts:false,ioi:false}, contestTier:1, lastWasEvent:false, wcQuality:0, wcTrainCount:0, eliteMode:false, sprintBQualified:false, wcHistory:[], provQualified:false, cspPassed:false, cttFailed:false, sleepCount:0, 剩余回合加成:1, careerHistory:[], tutorialStep:0, tutorialDone:G.flags.tutorialDone, problemScores:[] };
     adjustCutoffs(); addLog('高一新生，OI之旅开始！'); prologuePrep();
 }
 
@@ -932,7 +788,7 @@ function addLog(msg) {
 }
 function showFloatText(text, color) { var div = document.createElement('div'); div.className = 'float-text'; div.style.color = color||'#f1c40f'; div.textContent = text; document.body.appendChild(div); setTimeout(function(){ div.remove(); }, 2000); }
 
-// ===== 事件库 TRAIN_EV =====
+// ===== 事件库 =====
 var TRAIN_EV = {
     study: [
         {text: ICON.eventStudy+"你打开洛谷准备刷题，结果网站502。", eff: function(m){ updStat('心态', -Math.floor(3*m.neg)); }, txt: function(m){ return '心态'+calcActualTrainDelta('心态', -Math.floor(3*m.neg)); } },
@@ -1126,23 +982,20 @@ function getActionEnv(action) {
     return '';
 }
 
-// 主菜单与教程相关函数已在前文定义，此处省略（避免重复）
-
-// ===== 比赛核心函数 =====
+// ===== 比赛入口 =====
 function prologuePrep() { G.flags.stage='prep'; G.flags.term='上学期'; showScene('📅高一·上学期·赛前准备 (5次训练)', [{text:'开始训练', action:function(){ freeTraining(5, cspContest); } }]); }
 function freeTraining(cnt,next){
     G.flags.stage='training';
     G.flags.trainingCount=0;
     G.flags.trainingMax=cnt;
     G.flags.nextCb=next;
-    G.flags.nextCbName = next.name || '';
     trainingStep();
 }
 function nextTraining(){
     if(G.flags.trainingCount>=G.flags.trainingMax){
         var cb = G.flags.nextCb;
         if (typeof cb !== 'function') {
-            addLog('⚠️ 读档后回调丢失，返回主菜单');
+            addLog('⚠️ 回调丢失，返回主菜单');
             mainMenu();
             return;
         }
@@ -1155,7 +1008,7 @@ function trainingStep(){
     if(G.flags.trainingCount>=G.flags.trainingMax){
         var cb=G.flags.nextCb;
         if (typeof cb !== 'function') {
-            addLog('⚠️ 读档后回调丢失，返回主菜单');
+            addLog('⚠️ 回调丢失，返回主菜单');
             mainMenu();
             return;
         }
@@ -1228,33 +1081,25 @@ function afterTrainAction(){
 }
 function showDiary(){ var all=G.flags.diary.length?G.flags.diary.join('\n'):'暂无训练日记。'; showScene('📖 训练日记\n\n'+all, [{text:'返回', action:showTrainingOptions}]); }
 
+// ===== 各比赛入口 =====
 function cspContest(){ G.flags.contestPlayed.csp=true; startContest('CSP-S',4,'', function(s){ checkCSPResult(s); }); }
-functionMap.cspContest = cspContest;
 function noipContest(){ G.flags.contestPlayed.noip=true; startContest('NOIP',4,'省级联赛', function(s){ checkNOIPResult(s); }); }
-functionMap.noipContest = noipContest;
 function provDay1(){
     G.flags.term = (G.flags.year === 1) ? '下学期' : (G.flags.year === 2 ? '下学期' : '下学期');
     G.flags.contestPlayed.pd1=true; startContest('省选Day1',3,'省队选拔', function(s){ G.flags.scores.pd1=s; freeTraining(3, provDay2); });
 }
-functionMap.provDay1 = provDay1;
 function provDay2(){ startContest('省选Day2',3,'最后的机会', function(s){ G.flags.scores.pd2=s; var weighted=Math.floor(G.flags.scores.noip*0.35 + (G.flags.scores.pd1+s)*0.65); checkProvResult(weighted); }); }
-functionMap.provDay2 = provDay2;
 function noiDay1(){
     G.flags.term = '暑假';
     G.flags.contestPlayed.noi=true; startContest('NOI Day1',3,'全国决赛', function(s){ G.flags.scores.noi=s; showScene('🌙NOI Day1 得分 '+s, [{text:'进入Day2', action:function(){ noiDay2(); } }]); });
 }
-functionMap.noiDay1 = noiDay1;
 function noiDay2(){ startContest('NOI Day2',3,'最后一战', function(s){ var total = G.flags.scores.noi + s + G.flags.noiBonus; checkNOIResult(total); }); }
-functionMap.noiDay2 = noiDay2;
 function cttDay1(){
     G.flags.term = (G.flags.year === 2) ? '下学期' : '上学期';
     G.flags.contestPlayed.ctt=true; startContest('CTT Day1',3,'国家集训队选拔', function(s){ G.flags.scores.cttD1=s; freeTraining(1, cttDay2); });
 }
-functionMap.cttDay1 = cttDay1;
 function cttDay2(){ startContest('CTT Day2',3,'国家集训队选拔', function(s){ G.flags.scores.cttD2=s; freeTraining(1, cttDay3); }); }
-functionMap.cttDay2 = cttDay2;
 function cttDay3(){ startContest('CTT Day3',3,'最后一天', function(s){ G.flags.scores.cttD3=s; var total = G.flags.scores.cttD1 + G.flags.scores.cttD2 + s; checkCTTResult(total); }); }
-functionMap.cttDay3 = cttDay3;
 function wcTraining(next) {
     G.flags.term = '寒假';
     G.flags.stage='training';
@@ -1263,14 +1108,12 @@ function wcTraining(next) {
     G.flags.wcQuality=0;
     G.flags.trainingMax=5;
     G.flags.nextCb=next;
-    G.flags.nextCbName = next.name || '';
     G.flags.wcHistory=[];
     G.flags._wcEventPool = TRAIN_EV.wc.slice();
     showScene('⛄ 通过CTT！进入WC冬令营（5次训练）', [{text:'开始冬令营训练', action:function(){ wcTrainingStep(); } }]);
 }
-functionMap.wcTraining = wcTraining;
 function wcTrainingStep() {
-    if(G.flags.wcTrainCount>=5){ var cb=G.flags.nextCb; if (typeof cb !== 'function') { addLog('⚠️ 读档后回调丢失，返回主菜单'); mainMenu(); return; } cb(); return; }
+    if(G.flags.wcTrainCount>=5){ var cb=G.flags.nextCb; if (typeof cb !== 'function') { addLog('⚠️ 回调丢失，返回主菜单'); mainMenu(); return; } cb(); return; }
     G.flags.wcTrainCount++; playTone(440,0.07,'triangle');
     var pool=G.flags._wcEventPool;
     if(!pool || pool.length===0){ pool=TRAIN_EV.wc.slice(); G.flags._wcEventPool=pool; }
@@ -1329,21 +1172,15 @@ function ctsDay1(){
     G.flags.term = '下学期';
     G.flags.contestPlayed.cts=true; startContest('CTS Day1',3,'国家队选拔', function(s){ G.flags.scores.cts=s; freeTraining(1, ctsDay2); });
 }
-functionMap.ctsDay1 = ctsDay1;
 function ctsDay2(){ startContest('CTS Day2',3,'最后一关', function(s){ var ctsTotal=G.flags.scores.cts+s; checkCTSResult(ctsTotal); }); }
-functionMap.ctsDay2 = ctsDay2;
 function ioiDay1(){
     G.flags.term = '暑假';
     G.flags.contestPlayed.ioi=true; startContest('IOI Day1',3,'世界舞台', function(s){ G.flags.scores.ioi=s; showScene('🌍IOI Day1 得分 '+s, [{text:'进入Day2', action:function(){ ioiDay2(); } }]); });
 }
-functionMap.ioiDay1 = ioiDay1;
 function ioiDay2(){ startContest('IOI Day2',3,'巅峰之战', function(s){ var t=G.flags.scores.ioi+s; var a=getIOIAward(t); addAward(a); if(t>=G.cutoffs.ioiG) unlockAch('IOI金牌'); endGame('IOI圆满落幕\n总分：'+t+'\n'+a); }); }
-functionMap.ioiDay2 = ioiDay2;
 
 function seniorCSPContest(){ G.flags.term='上学期'; startContest('CSP-S',4,'（纯参与）', function(s){ G.flags.scores.csp=s; checkSeniorCSPResult(s); }); }
-functionMap.seniorCSPContest = seniorCSPContest;
 function seniorNOIPContest(){ startContest('NOIP',4,'（纯参与）', function(s){ G.flags.scores.noip=s; showScene('NOIP得分：'+s+'（纯参与，不影响后续）', [{text:'继续', action:function(){ freeTraining(3, function(){ cttDay1(); }); } }]); }); }
-functionMap.seniorNOIPContest = seniorNOIPContest;
 
 function checkSeniorCSPResult(score) {
     if(score <= 0) {
@@ -1352,7 +1189,6 @@ function checkSeniorCSPResult(score) {
         showScene('CSP-S 得分：'+score+'（纯参与）', [{text:'继续', action:function(){ freeTraining(3, seniorNOIPContest); } }]);
     }
 }
-functionMap.checkSeniorCSPResult = checkSeniorCSPResult;
 
 function checkCSPResult(score) {
     G.flags.scores.csp = score;
@@ -1382,7 +1218,6 @@ function checkCSPResult(score) {
         }
     }
 }
-functionMap.checkCSPResult = checkCSPResult;
 
 function checkNOIPResult(score) {
     G.flags.scores.noip = score;
@@ -1411,7 +1246,6 @@ function checkNOIPResult(score) {
         }
     }
 }
-functionMap.checkNOIPResult = checkNOIPResult;
 
 function checkProvResult(weighted) {
     var award = getProvAward(weighted);
@@ -1440,7 +1274,6 @@ function checkProvResult(weighted) {
         }
     }
 }
-functionMap.checkProvResult = checkProvResult;
 
 function checkNOIResult(total) {
     G.flags.scores.noi = total;
@@ -1503,7 +1336,6 @@ function checkNOIResult(total) {
         }
     }
 }
-functionMap.checkNOIResult = checkNOIResult;
 
 function checkCTTResult(total) {
     G.flags.scores.ctt = total;
@@ -1534,7 +1366,6 @@ function checkCTTResult(total) {
         }
     }
 }
-functionMap.checkCTTResult = checkCTTResult;
 
 function checkCTSResult(ctsTotal) {
     var dailyScore = Math.min(100, G.flags.wcQuality * 10);
@@ -1560,7 +1391,6 @@ function checkCTSResult(ctsTotal) {
         }
     }
 }
-functionMap.checkCTSResult = checkCTSResult;
 
 function advanceYear() {
     if (G.flags.year >= 2) { endGame('竞赛生涯结束'); return; }
@@ -1573,7 +1403,6 @@ function advanceYear() {
     adjustCutoffs();
     showScene('重新开始，这次是高二了。', [{text:'开始新赛季', action:function(){ G.flags.stage='prep'; updateDisplay(); freeTraining(5, cspContest); } }]);
 }
-functionMap.advanceYear = advanceYear;
 
 function selectStrategy(next) { var recommend=''; if(G.player.代码力<40) recommend=' 💡推荐：稳扎稳打'; else if(G.player.知识>70) recommend=' 💡推荐：放手一搏'; else if(G.player.心态<40) recommend=' 💡推荐：心态调整'; showScene('🎯 选择本场策略：'+recommend, [{text:'稳扎稳打（绿色+15%）', action:function(){ G.flags.strategy='steady'; next(); } }, {text:'放手一搏（黄色+20%）', action:function(){ G.flags.strategy='risky'; next(); } }, {text:'心态调整（跳题额外+5心态）', action:function(){ G.flags.strategy='mood'; next(); } }]); }
 
@@ -1585,7 +1414,6 @@ function startContest(name,probs,desc,next){
         addLog('🤝 队友鼓励，初始+5分');
     }
     G.flags.cProbScore=0; G.flags.nextProbBonus=false; G.flags.curProbBonus=false; G.flags.nextCb=next;
-    G.flags.nextCbName = next.name || '';
     G.flags.rerollCount=0; G.flags.lastAction=null;
     G.flags.moodRecoverUsed = false;
     G.flags.contestTier = getContestTier(name);
@@ -1848,6 +1676,16 @@ function endContest() {
         updStat('心态', Math.floor(b * 0.6));
         addLog('📈比赛经验：代码力+'+b+' 心态+'+Math.floor(b*0.6));
     }
+    
+    // ===== 修复：确保所有题目得分都被记录 =====
+    if (!G.flags.problemScores) G.flags.problemScores = [];
+    while (G.flags.problemScores.length < G.flags.cMaxP) {
+        G.flags.problemScores.push(0);
+    }
+    if (G.flags.cProbScore !== undefined) {
+        G.flags.problemScores[G.flags.cMaxP - 1] = G.flags.cProbScore || 0;
+    }
+    
     var detailHtml = '';
     if (G.flags.problemScores && G.flags.problemScores.length > 0) {
         detailHtml = '\n\n📊 每题得分：\n';
@@ -1856,6 +1694,7 @@ function endContest() {
         });
         detailHtml += '  ──────────\n  总分：' + s + '分';
     }
+    
     setTimeout(function() {
         if (typeof next !== 'function') {
             addLog('❌ 错误：比赛回调函数缺失，返回主菜单');
